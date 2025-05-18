@@ -57,17 +57,17 @@ public class WelcomeJDialog extends JDialog implements WelcomeController {
 
         jLabel1.setIcon(new javax.swing.ImageIcon("C:\\Users\\Chau Nhat Duy\\Documents\\Java-Swing-Project\\PS44284_ChauNhatDuy_SOF2043\\PS44284_ChauNhatDuy_SOF2043\\src\\main\\java\\poly\\cafe\\icons\\trump-small.png")); // NOI18N
         jLabel1.setText("Oke");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 50, 120, -1));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 40, 120, -1));
 
         progressBar.setForeground(new java.awt.Color(255, 102, 0));
         progressBar.setValue(40);
         progressBar.setStringPainted(true);
-        jPanel1.add(progressBar, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 310, 720, 70));
+        jPanel1.add(progressBar, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 300, 740, 80));
 
         lblWelcom.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
         lblWelcom.setForeground(new java.awt.Color(255, 102, 0));
         lblWelcom.setText("PolyCafe");
-        jPanel1.add(lblWelcom, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 260, 160, 40));
+        jPanel1.add(lblWelcom, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 240, 160, 40));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

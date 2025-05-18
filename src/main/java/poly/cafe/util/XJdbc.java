@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 /**
  * Lớp tiện ích hỗ trợ làm việc với CSDL quan hệ
- *      
+ *
  * @author NghiemN
  * @version 1.0
  */
