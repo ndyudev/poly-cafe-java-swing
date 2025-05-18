@@ -2,12 +2,17 @@ package poly.cafe.ui.manager;
 
 import poly.cafe.ui.PolyCafeController;
 import poly.cafe.ui.ChangePasswordJDialog;
+import poly.cafe.util.ConnectionDatabase;
 
 public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCafeController {
 
     public PolyCafeJFrameManager() {
         initComponents();
-        // nếu có dùng init() từ interface
+    }
+    
+    @Override
+    public void dispose() {
+        super.dispose();
     }
 
     @SuppressWarnings("unchecked")
@@ -334,7 +339,11 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
 
     @Override
     public void init() {
-        setLocationRelativeTo(null);
+        this.setTitle("Poly Cafe Manager");
+        this.setSize(800, 600);
+        this.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+        // Thêm logic kết nối nếu cần
+         new ConnectionDatabase();
     }
 
     @Override

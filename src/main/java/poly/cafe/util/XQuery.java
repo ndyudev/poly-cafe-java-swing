@@ -69,7 +69,7 @@ public class XQuery {
     private static <B> B readBean(ResultSet resultSet, Class<B> beanClass) throws Exception {
         B bean = beanClass.getDeclaredConstructor().newInstance();
         Method[] methods = beanClass.getDeclaredMethods();
-        for(Method method: methods){
+        for (Method method : methods) {
             String name = method.getName();
             if (name.startsWith("set") && method.getParameterCount() == 1) {
                 try {
@@ -82,7 +82,7 @@ public class XQuery {
         }
         return bean;
     }
-    
+
     public static void main(String[] args) {
         demo1();
         demo2();
