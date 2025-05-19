@@ -5,7 +5,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "Bills")
-public class Bills {
+public class Bill {
 
     @Id
     @Column(name = "Id", nullable = false)
@@ -31,9 +31,9 @@ public class Bills {
     private int status;
 
     // Constructors
-    public Bills() {}
+    public Bill() {}
 
-    public Bills(Users user, Cards card, Date checkin, Date checkout, int status) {
+    public Bill(Users user, Cards card, Date checkin, Date checkout, int status) {
         this.user = user;
         this.card = card;
         this.checkin = checkin;

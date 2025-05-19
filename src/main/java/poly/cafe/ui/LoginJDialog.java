@@ -1,6 +1,7 @@
 package poly.cafe.ui;
 
 import javax.swing.JFrame;
+import poly.cafe.ui.manager.PolyCafeJFrameManager;
 
 public class LoginJDialog extends javax.swing.JFrame {
 
@@ -15,13 +16,12 @@ public class LoginJDialog extends javax.swing.JFrame {
         setLocationRelativeTo(parent);
     }
 
-    private void showWelcomeFrame() {
-        WelcomeJDialog frame = new WelcomeJDialog(); // Nếu WelcomeJDialog cũng đổi thành JFrame thì sửa thành WelcomeJFrame
+    private void showPolyCafeJFrameManager() {
+        PolyCafeJFrameManager frame = new PolyCafeJFrameManager();
         frame.setVisible(true);
         frame.setLocationRelativeTo(null);
-        this.dispose(); // Đóng cửa sổ hiện tại
+        this.dispose();
     }
-
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -68,6 +68,11 @@ public class LoginJDialog extends javax.swing.JFrame {
         });
 
         btnClose.setText("KẾT THÚC");
+        btnClose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloseActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -124,8 +129,12 @@ public class LoginJDialog extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-        showWelcomeFrame();
+        
     }//GEN-LAST:event_btnLoginActionPerformed
+
+    private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCloseActionPerformed
 
     /**
      * @param args the command line arguments

@@ -33,7 +33,7 @@ public class WelcomeJDialog extends JDialog implements WelcomeController {
             }
             // Sau khi progress bar đạt 100%, mở cửa sổ tiếp theo
             this.dispose();
-            new poly.cafe.ui.manager.PolyCafeJFrameManager().setVisible(true);
+            new poly.cafe.ui.LoginJDialog().setVisible(true);
         }).start();
     }
 

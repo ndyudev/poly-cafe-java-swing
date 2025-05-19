@@ -136,6 +136,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="K&#x1ebe;T TH&#xda;C"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCloseActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

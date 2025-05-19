@@ -4,7 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "Categories")
-public class Categories {
+public class Category {
 
     @Id
     @Column(name = "Id", length = 20, nullable = false)
@@ -14,9 +14,9 @@ public class Categories {
     private String name;
 
     // Constructors
-    public Categories() {}
+    public Category() {}
 
-    public Categories(String id, String name) {
+    public Category(String id, String name) {
         this.id = id;
         this.name = name;
     }
