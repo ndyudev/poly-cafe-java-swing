@@ -97,4 +97,33 @@ public class XQuery {
         String sql = "SELECT * FROM Users WHERE Fullname LIKE ?";
         List<Users> list = XQuery.getBeanList(Users.class, sql, "%Nguyễn %");
     }
+
+    public static <T> List<T> getEntityList(Class<T> clazz, String sql, Object... args) throws Exception {
+        List<T> list = new ArrayList<>();
+        try (ResultSet rs = XJdbc.executeQuery(sql, args)) {
+            while (rs.next()) {
+                T entity = mapToEntity(clazz, rs);
+                list.add(entity);
+            }
+        }
+        return list;
+    }
+
+    // Lấy một entity từ ResultSet
+//    public static <T> T getSingleBean(Class<T> clazz, String sql, Object... args) throws Exception {
+//        List<T> list = getEntityList(clazz, sql, args);
+//        return list.isEmpty() ? null : list.get(0);
+//    }
+
+    // Ánh xạ ResultSet thành entity
+    private static <T> T mapToEntity(Class<T> clazz, ResultSet rs) throws Exception {
+        T entity = clazz.getDeclaredConstructor().newInstance();
+        if (clazz == poly.cafe.entity.Category.class) {
+            poly.cafe.entity.Category category = (poly.cafe.entity.Category) entity;
+            category.setId(rs.getString("Id"));
+            category.setName(rs.getString("Name"));
+            return (T) category;
+        }
+        throw new UnsupportedOperationException("Entity mapping not supported for " + clazz.getName());
+    }
 }

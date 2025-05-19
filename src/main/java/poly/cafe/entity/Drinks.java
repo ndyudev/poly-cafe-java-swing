@@ -27,12 +27,12 @@ public class Drinks {
 
     @ManyToOne
     @JoinColumn(name = "CategoryId", nullable = false, foreignKey = @ForeignKey(name = "FK_Drinks_Categories"))
-    private Categories category;
+    private Category category;
 
     // Constructors
     public Drinks() {}
 
-    public Drinks(String id, String name, float unitPrice, float discount, String image, boolean available, Categories category) {
+    public Drinks(String id, String name, float unitPrice, float discount, String image, boolean available, Category category) {
         this.id = id;
         this.name = name;
         this.unitPrice = unitPrice;
@@ -91,11 +91,11 @@ public class Drinks {
         this.available = available;
     }
 
-    public Categories getCategory() {
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(Categories category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 

@@ -3,6 +3,7 @@ package poly.cafe.ui.manager;
 import poly.cafe.ui.PolyCafeController;
 import poly.cafe.ui.ChangePasswordJDialog;
 import poly.cafe.util.ConnectionDatabase;
+import poly.cafe.util.XJdbc;
 
 public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCafeController {
 
@@ -343,7 +344,7 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
         this.setSize(800, 600);
         this.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
         // Thêm logic kết nối nếu cần
-         new ConnectionDatabase();
+         XJdbc.openConnection();
     }
 
     @Override

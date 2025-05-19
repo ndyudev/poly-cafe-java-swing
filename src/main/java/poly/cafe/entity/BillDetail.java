@@ -4,7 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "BillDetails")
-public class BillDetails {
+public class BillDetail {
 
     @Id
     @Column(name = "Id", nullable = false)
@@ -12,7 +12,7 @@ public class BillDetails {
 
     @ManyToOne
     @JoinColumn(name = "BillId", nullable = false, foreignKey = @ForeignKey(name = "FK_BillDetails_Bills"))
-    private Bills bill;
+    private Bill bill;
 
     @ManyToOne
     @JoinColumn(name = "DrinkId", nullable = false, foreignKey = @ForeignKey(name = "FK_BillDetails_Drinks"))
@@ -28,9 +28,9 @@ public class BillDetails {
     private int quantity;
 
     // Constructors
-    public BillDetails() {}
+    public BillDetail() {}
 
-    public BillDetails(Bills bill, Drinks drink, float unitPrice, float discount, int quantity) {
+    public BillDetail(Bill bill, Drinks drink, float unitPrice, float discount, int quantity) {
         this.bill = bill;
         this.drink = drink;
         this.unitPrice = unitPrice;
@@ -47,11 +47,11 @@ public class BillDetails {
         this.id = id;
     }
 
-    public Bills getBill() {
+    public Bill getBill() {
         return bill;
     }
 
-    public void setBill(Bills bill) {
+    public void setBill(Bill bill) {
         this.bill = bill;
     }
 
