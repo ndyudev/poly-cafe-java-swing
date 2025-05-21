@@ -2,7 +2,7 @@ package poly.cafe.ui.manager;
 
 import poly.cafe.ui.PolyCafeController;
 import poly.cafe.ui.ChangePasswordJDialog;
-import poly.cafe.util.ConnectionDatabase;
+import poly.cafe.util.DatabaseSQL;
 import poly.cafe.util.XJdbc;
 
 public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCafeController {
