@@ -15,7 +15,7 @@ public class CategoryDAOImpl implements CategoryDAO {
     String findByIdSql = "SELECT * FROM Categories WHERE Id=?";
 
     @Override
-    public Category create(Category entity) {
+    public Category insert(Category entity) {
         Object[] values = {
             entity.getId(),
             entity.getName()
