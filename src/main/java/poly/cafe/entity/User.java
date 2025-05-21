@@ -1,6 +1,5 @@
 package poly.cafe.entity;
 
-import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,13 +9,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Data
-public class Bill {
 
-    private Long id;
+public class User {
+
     private String username;
-    private Integer cardId;
+    private String password;
+    private boolean enabled;
+    private String fullname;
     @Builder.Default
-    private Date checkin = new Date();
-    private Date checkout;
-    private int status;
+    private String photo = "photo.png";
+    private boolean manager;
 }

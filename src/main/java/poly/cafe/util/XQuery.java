@@ -1,12 +1,17 @@
 package poly.cafe.util;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import poly.cafe.entity.Users;
+import poly.cafe.entity.User;
+import poly.cafe.util.XJdbc;
 
 /**
  * Lớp tiện ích hỗ trợ truy vấn và chuyển đổi sang đối tượng
@@ -90,22 +95,58 @@ public class XQuery {
 
     private static void demo1() {
         String sql = "SELECT * FROM Users WHERE Username=? AND Password=?";
-        Users user = XQuery.getSingleBean(Users.class, sql, "NghiemN", "123456");
+        User user = XQuery.getSingleBean(User.class, sql, "NghiemN", "123456");
     }
 
     private static void demo2() {
         String sql = "SELECT * FROM Users WHERE Fullname LIKE ?";
-        List<Users> list = XQuery.getBeanList(Users.class, sql, "%Nguyễn %");
+        List<User> list = XQuery.getBeanList(User.class, sql, "%Nguyễn %");
     }
 
-    public static <T> List<T> getEntityList(Class<T> clazz, String sql, Object... args) throws Exception {
+    public static <T> List<T> getEntityList(Class<T> clazz, String sql, Object... args) {
         List<T> list = new ArrayList<>();
-        try (ResultSet rs = XJdbc.executeQuery(sql, args)) {
+
+        try {
+            Connection conn = XJdbc.getConnection(); 
+            // sử dụng kết nối từ class XJdbc
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            // Gán giá trị cho các tham số ?
+            for (int i = 0; i < args.length; i++) {
+                stmt.setObject(i + 1, args[i]);
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
             while (rs.next()) {
-                T entity = mapToEntity(clazz, rs);
+                T entity = clazz.getDeclaredConstructor().newInstance();
+
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i); // tên cột
+                    Object columnValue = rs.getObject(i);
+
+                    try {
+                        Field field = clazz.getDeclaredField(columnName);
+                        field.setAccessible(true);
+                        field.set(entity, columnValue);
+                    } catch (NoSuchFieldException e) {
+                        // Nếu không tìm thấy field thì bỏ qua cột này
+                    }
+                }
                 list.add(entity);
             }
+
+            rs.close();
+            stmt.close();
+            conn.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi truy vấn danh sách " + clazz.getSimpleName(), e);
         }
+
         return list;
     }
 
@@ -114,7 +155,6 @@ public class XQuery {
 //        List<T> list = getEntityList(clazz, sql, args);
 //        return list.isEmpty() ? null : list.get(0);
 //    }
-
     // Ánh xạ ResultSet thành entity
     private static <T> T mapToEntity(Class<T> clazz, ResultSet rs) throws Exception {
         T entity = clazz.getDeclaredConstructor().newInstance();
@@ -126,4 +166,5 @@ public class XQuery {
         }
         throw new UnsupportedOperationException("Entity mapping not supported for " + clazz.getName());
     }
+
 }

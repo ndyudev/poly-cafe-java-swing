@@ -1,20 +1,17 @@
 package poly.cafe.entity;
 
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- *
- * @author User
- */
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Data
-public class Category {
+public class Card {
 
-    private String id;
-    private String name;
+    private Integer id;
+    private int status;
 }

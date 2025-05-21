@@ -1,9 +1,8 @@
-
 package poly.cafe.dao;
 
-import poly.cafe.entity.Users;
+import java.util.List;
+import poly.cafe.entity.User;
 
-
-public interface UserDAO extends CrudDAO<Users, String>{ 
-    
-} 
+public interface UserDAO extends CrudDAO<User, String>{
+    List<User> findByFullname(String fullName);
+}

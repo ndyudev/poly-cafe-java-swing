@@ -1,7 +1,7 @@
 package poly.cafe.dao;
 
-import javax.smartcardio.Card;
+import poly.cafe.entity.Card;
 
-
-public interface CardDAO extends CrudDAO<Card, Integer>{ 
-} 
+public interface CardDAO extends CrudDAO<Card, Integer>{
+    
+}
