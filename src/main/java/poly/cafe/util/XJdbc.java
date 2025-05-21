@@ -155,4 +155,8 @@ public class XJdbc {
         String sql = "DELETE FROM Drinks WHERE UnitPrice < ?";
         var count = XJdbc.executeUpdate(sql, 0.0);
     }
+
+    public static Connection getConnection() {
+        return openConnection();
+    }
 }
