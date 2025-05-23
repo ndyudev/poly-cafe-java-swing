@@ -2,12 +2,8 @@ package poly.cafe.ui.manager;
 
 import javax.swing.JFrame;
 
-
 public class CardManagerJDialog extends javax.swing.JFrame {
 
-    /**
-     * Creates new form CardManagerJDialog
-     */
     public CardManagerJDialog() {
         initComponents();
     }
@@ -16,7 +12,7 @@ public class CardManagerJDialog extends javax.swing.JFrame {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -45,8 +41,10 @@ public class CardManagerJDialog extends javax.swing.JFrame {
         jButton3 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
         jButton7 = new javax.swing.JButton();
+        jButton9 = new javax.swing.JButton();
+        jButton10 = new javax.swing.JButton();
+        jButton11 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Quản lý thẻ định danh");
@@ -95,7 +93,7 @@ public class CardManagerJDialog extends javax.swing.JFrame {
                 .addComponent(btnSelectNotAll)
                 .addGap(18, 18, 18)
                 .addComponent(jButton2)
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -111,8 +109,8 @@ public class CardManagerJDialog extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("DANH SÁCH", jPanel1);
 
-        jLabel1.setFont(new java.awt.Font("SVN-Aller", 1, 14)); // NOI18N
-        jLabel1.setText("Mã thẻ");
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel1.setText("MÃ THẺ");
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel2.setText("TRẠNG THÁI:");
@@ -131,9 +129,13 @@ public class CardManagerJDialog extends javax.swing.JFrame {
 
         jButton5.setText("Nhập mới");
 
-        jButton6.setText("|<");
+        jButton7.setText("|<");
 
-        jButton7.setText("<<");
+        jButton9.setText(">|");
+
+        jButton10.setText("<<");
+
+        jButton11.setText(">>");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -164,11 +166,15 @@ public class CardManagerJDialog extends javax.swing.JFrame {
                                 .addComponent(jButton4)
                                 .addGap(18, 18, 18)
                                 .addComponent(jButton5)
-                                .addGap(64, 64, 64)
-                                .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(45, 45, 45)
+                                .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 108, Short.MAX_VALUE))))
+                                .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 6, Short.MAX_VALUE))))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -184,16 +190,18 @@ public class CardManagerJDialog extends javax.swing.JFrame {
                     .addComponent(jCheckBox1)
                     .addComponent(jCheckBox2)
                     .addComponent(jCheckBox3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 74, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 72, Short.MAX_VALUE)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 18, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(15, 15, 15)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
                     .addComponent(jButton3)
                     .addComponent(jButton4)
                     .addComponent(jButton5)
-                    .addComponent(jButton6)
-                    .addComponent(jButton7))
+                    .addComponent(jButton7)
+                    .addComponent(jButton10)
+                    .addComponent(jButton11)
+                    .addComponent(jButton9))
                 .addGap(9, 9, 9))
         );
 
@@ -203,7 +211,7 @@ public class CardManagerJDialog extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 666, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -253,12 +261,14 @@ public class CardManagerJDialog extends javax.swing.JFrame {
     private javax.swing.JButton btnSelectAll;
     private javax.swing.JButton btnSelectNotAll;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton10;
+    private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
+    private javax.swing.JButton jButton9;
     private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JCheckBox jCheckBox3;
