@@ -1,5 +1,8 @@
 package poly.cafe.ui;
 
+import poly.cafe.util.XAuth;
+import poly.cafe.util.XIcon;
+
 public class PolyCafeJFrame extends javax.swing.JFrame {
 
     /**
@@ -8,6 +11,22 @@ public class PolyCafeJFrame extends javax.swing.JFrame {
     public PolyCafeJFrame() {
         initComponents();
     }
+
+//    @Override
+//    public void init() {
+//        this.setIconImage(XIcon.getIcon("trump-small.png").getImage());
+//        this.setLocationRelativeTo(null);
+//
+//        this.showWelcomeJDialog(this);
+//        this.showLoginJDialog(this);
+//
+//        XIcon.setIcon(lblPhoto, "photos/" + XAuth.user.getPhoto());
+//        lblFullname.setText(XAuth.user.getFullname());
+//
+//        if (!XAuth.user.isManager()) {
+//            pnlCenter.remove(pnlManager);
+//        }
+//    }
 
     /**
      * This method is called from within the constructor to initialize the form.

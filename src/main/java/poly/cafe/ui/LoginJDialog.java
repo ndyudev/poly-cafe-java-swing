@@ -1,7 +1,12 @@
 package poly.cafe.ui;
 
 import javax.swing.JFrame;
+import poly.cafe.dao.UserDAO;
+import poly.cafe.dao.impl.UserDAOImpl;
+import poly.cafe.entity.User;
 import poly.cafe.ui.manager.PolyCafeJFrameManager;
+import poly.cafe.util.XAuth;
+import poly.cafe.util.XDialog;
 
 public class LoginJDialog extends javax.swing.JFrame {
 
@@ -23,6 +28,24 @@ public class LoginJDialog extends javax.swing.JFrame {
         this.dispose();
     }
 
+    @Override
+    public void login() {
+        String username = txtUsername.getText();
+        String password = txtPassword.getText();
+        UserDAO dao = new UserDAOImpl();
+        User user = dao.findById(username);
+        if (user == null) {
+            XDialog.alert("Sai tên đăng nhập!");
+        } else if (!password.equals(user.getPassword())) {
+            XDialog.alert("Sai mật khẩu đăng nhập!");
+        } else if (!user.isEnabled()) {
+            XDialog.alert("Tài khoản của bạn đang tạm dừng!");
+        } else {
+            XAuth.user = user; // duy trì user đăng nhập 
+            this.dispose();
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -37,7 +60,7 @@ public class LoginJDialog extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JSeparator();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        txtUser = new javax.swing.JTextField();
+        txtUsername = new javax.swing.JTextField();
         txtPassword = new javax.swing.JTextField();
         jSeparator2 = new javax.swing.JSeparator();
         btnLogin = new javax.swing.JButton();
@@ -88,7 +111,7 @@ public class LoginJDialog extends javax.swing.JFrame {
                     .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtPassword, javax.swing.GroupLayout.DEFAULT_SIZE, 565, Short.MAX_VALUE)
                     .addComponent(jSeparator2)
-                    .addComponent(txtUser)
+                    .addComponent(txtUsername)
                     .addComponent(jSeparator1))
                 .addContainerGap(46, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -111,7 +134,7 @@ public class LoginJDialog extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
@@ -129,7 +152,7 @@ public class LoginJDialog extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-        
+
     }//GEN-LAST:event_btnLoginActionPerformed
 
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
@@ -159,6 +182,6 @@ public class LoginJDialog extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JTextField txtPassword;
-    private javax.swing.JTextField txtUser;
+    private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 }
