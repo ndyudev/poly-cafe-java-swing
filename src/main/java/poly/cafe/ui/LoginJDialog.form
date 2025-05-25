@@ -33,7 +33,7 @@
                   <Component id="jLabel4" min="-2" pref="133" max="-2" attributes="0"/>
                   <Component id="txtPassword" alignment="0" pref="565" max="32767" attributes="0"/>
                   <Component id="jSeparator2" alignment="0" max="32767" attributes="0"/>
-                  <Component id="txtUser" alignment="0" max="32767" attributes="0"/>
+                  <Component id="txtUsername" alignment="0" max="32767" attributes="0"/>
                   <Component id="jSeparator1" alignment="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace pref="46" max="32767" attributes="0"/>
@@ -60,7 +60,7 @@
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="txtUser" min="-2" pref="37" max="-2" attributes="0"/>
+                      <Component id="txtUsername" min="-2" pref="37" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                       <EmptySpace pref="15" max="32767" attributes="0"/>
@@ -118,7 +118,7 @@
         <Property name="text" type="java.lang.String" value="M&#x1ead;t kh&#x1ea9;u:"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JTextField" name="txtUser">
+    <Component class="javax.swing.JTextField" name="txtUsername">
     </Component>
     <Component class="javax.swing.JTextField" name="txtPassword">
     </Component>
