@@ -28,23 +28,23 @@ public class LoginJDialog extends javax.swing.JFrame {
         this.dispose();
     }
 
-    @Override
-    public void login() {
-        String username = txtUsername.getText();
-        String password = txtPassword.getText();
-        UserDAO dao = new UserDAOImpl();
-        User user = dao.findById(username);
-        if (user == null) {
-            XDialog.alert("Sai tên đăng nhập!");
-        } else if (!password.equals(user.getPassword())) {
-            XDialog.alert("Sai mật khẩu đăng nhập!");
-        } else if (!user.isEnabled()) {
-            XDialog.alert("Tài khoản của bạn đang tạm dừng!");
-        } else {
-            XAuth.user = user; // duy trì user đăng nhập 
-            this.dispose();
-        }
-    }
+//    @Override
+//    public void login() {
+//        String username = txtUsername.getText();
+//        String password = txtPassword.getText();
+//        UserDAO dao = new UserDAOImpl();
+//        User user = dao.findById(username);
+//        if (user == null) {
+//            XDialog.alert("Sai tên đăng nhập!");
+//        } else if (!password.equals(user.getPassword())) {
+//            XDialog.alert("Sai mật khẩu đăng nhập!");
+//        } else if (!user.isEnabled()) {
+//            XDialog.alert("Tài khoản của bạn đang tạm dừng!");
+//        } else {
+//            XAuth.user = user; // duy trì user đăng nhập 
+//            this.dispose();
+//        }
+//    }
 
     /**
      * This method is called from within the constructor to initialize the form.

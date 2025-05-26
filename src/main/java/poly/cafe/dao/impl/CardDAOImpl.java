@@ -3,7 +3,6 @@ package poly.cafe.dao.impl;
 import java.util.List;
 import poly.cafe.dao.CardDAO;
 import poly.cafe.entity.Card;
-import poly.cafe.entity.Drink;
 import poly.cafe.util.XJdbc;
 import poly.cafe.util.XQuery;
 

@@ -29,7 +29,7 @@ public class Test {
         drink.setDiscount(0.1);
         drink.setImage("tra_dao.jpg");
         drink.setAvailable(true);
-        drink.setCategoryId("CAT01"); // đảm bảo CAT01 có trong Categories
+        drink.setCategoryId("CAT01");
 
         System.out.println(">> Insert vào DB...");
         DatabaseSQL.insertDrink(drink);
