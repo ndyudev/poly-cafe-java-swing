@@ -9,10 +9,6 @@ import poly.cafe.entity.User;
 import poly.cafe.util.XJdbc;
 import javax.swing.JOptionPane;
 
-/**
- *
- * @author Chauu Nhat Duyy
- */
 public final class UserManagerJDialog extends javax.swing.JFrame {
 
     private UserDAO userDAO = new UserDAOImpl();
@@ -26,7 +22,7 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
     }
 
     public UserManagerJDialog(JFrame parent, boolean b) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+
     }
 
     void fillTable() {

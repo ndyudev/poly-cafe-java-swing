@@ -1,6 +1,11 @@
 package poly.cafe.ui.manager;
 
+import java.util.List;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import poly.cafe.dao.CardDAO;
+import poly.cafe.entity.Card;
 
 public class CardManagerJDialog extends javax.swing.JFrame {
 
@@ -9,10 +14,32 @@ public class CardManagerJDialog extends javax.swing.JFrame {
     }
 
     public CardManagerJDialog(JFrame frame, boolean b) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+
     }
 
-    
+    void fillTable() {
+        DefaultTableModel model = (DefaultTableModel) tblCards.getModel();
+        model.setRowCount(0); // clear table
+
+        try {
+            List<Card> list = CardDAO.findAll();
+            for (Card c : list) {
+                Object[] row = {
+                    c.,
+                    u.getPassword(),
+                    u.getFullname(),
+                    u.getPhoto(),
+                    u.isManager(),
+                    u.isEnabled(),
+                    false // Cột "Select" mặc định là false
+                };
+                model.addRow(row);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi truy vấn dữ liệu");
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -25,7 +52,7 @@ public class CardManagerJDialog extends javax.swing.JFrame {
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tblList = new javax.swing.JTable();
+        tblCards = new javax.swing.JTable();
         btnSelectAll = new javax.swing.JButton();
         btnSelectNotAll = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
@@ -49,7 +76,7 @@ public class CardManagerJDialog extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Quản lý thẻ định danh");
 
-        tblList.setModel(new javax.swing.table.DefaultTableModel(
+        tblCards.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null},
                 {null, null, null},
@@ -57,7 +84,7 @@ public class CardManagerJDialog extends javax.swing.JFrame {
                 {null, null, null}
             },
             new String [] {
-                "Mã thẻ", "Trạng thái", ""
+                "Mã thẻ", "Trạng thái", "Select"
             }
         ) {
             Class[] types = new Class [] {
@@ -68,11 +95,11 @@ public class CardManagerJDialog extends javax.swing.JFrame {
                 return types [columnIndex];
             }
         });
-        jScrollPane1.setViewportView(tblList);
-        if (tblList.getColumnModel().getColumnCount() > 0) {
-            tblList.getColumnModel().getColumn(0).setResizable(false);
-            tblList.getColumnModel().getColumn(1).setResizable(false);
-            tblList.getColumnModel().getColumn(2).setResizable(false);
+        jScrollPane1.setViewportView(tblCards);
+        if (tblCards.getColumnModel().getColumnCount() > 0) {
+            tblCards.getColumnModel().getColumn(0).setResizable(false);
+            tblCards.getColumnModel().getColumn(1).setResizable(false);
+            tblCards.getColumnModel().getColumn(2).setResizable(false);
         }
 
         btnSelectAll.setText("Chọn tất cả");
@@ -99,12 +126,12 @@ public class CardManagerJDialog extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 281, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton2)
+                    .addComponent(btnSelectAll)
                     .addComponent(btnSelectNotAll)
-                    .addComponent(btnSelectAll))
-                .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jButton2))
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("DANH SÁCH", jPanel1);
@@ -190,7 +217,7 @@ public class CardManagerJDialog extends javax.swing.JFrame {
                     .addComponent(jCheckBox1)
                     .addComponent(jCheckBox2)
                     .addComponent(jCheckBox3))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 72, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 82, Short.MAX_VALUE)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 18, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(15, 15, 15)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -280,6 +307,6 @@ public class CardManagerJDialog extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextField jTextField1;
-    private javax.swing.JTable tblList;
+    private javax.swing.JTable tblCards;
     // End of variables declaration//GEN-END:variables
 }
