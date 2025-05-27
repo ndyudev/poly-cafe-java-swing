@@ -15,13 +15,12 @@ public class CardDAOImpl implements CardDAO {
     String findByIdSql = "SELECT * FROM Cards WHERE Id=?";
 
     @Override
-    public Card create(Card entity) {
+        public void create(Card entity) {
         Object[] values = {
             entity.getId(),
             entity.getStatus()
         };
         XJdbc.executeUpdate(createSql, values);
-        return entity;
     }
 
     @Override

@@ -4,15 +4,13 @@ import java.util.List;
 import poly.cafe.entity.Card;
 
 public interface CardDAO extends CrudDAO<Card, Integer>{
-    void insert(Card id);
+    void create(Card entity);
 
-    void update(Card id);
+    void update(Card entity);
 
-    void delete(Integer id);
+    void deleteById(Integer id);
 
     List<Card> findAll();
 
     Card findById(Integer id);
-
-    List<Card> findByName(Integer id);
 }
