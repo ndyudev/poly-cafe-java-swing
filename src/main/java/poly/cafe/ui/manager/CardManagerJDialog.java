@@ -4,7 +4,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import poly.cafe.dao.CardDAO;
+import poly.cafe.dao.impl.CardDAOImpl;
 import poly.cafe.entity.Card;
 
 public class CardManagerJDialog extends javax.swing.JFrame {
@@ -13,30 +13,30 @@ public class CardManagerJDialog extends javax.swing.JFrame {
         initComponents();
     }
 
-    public CardManagerJDialog(JFrame frame, boolean b) {
-
+    public CardManagerJDialog(JFrame frame, boolean modal) {
+        super(); // hoặc super(frame, modal) nếu kế thừa JDialog
+        initComponents();
+        fillTable(); // load dữ liệu khi mở
     }
+
+    CardDAOImpl cardDAO = new CardDAOImpl();
+    List<Card> cards = cardDAO.findAll();
 
     void fillTable() {
         DefaultTableModel model = (DefaultTableModel) tblCards.getModel();
         model.setRowCount(0); // clear table
 
         try {
-            List<Card> list = CardDAO.findAll();
+            List<Card> list = cardDAO.findAll();
             for (Card c : list) {
-                Object[] row = {
-                    c.,
-                    u.getPassword(),
-                    u.getFullname(),
-                    u.getPhoto(),
-                    u.isManager(),
-                    u.isEnabled(),
-                    false // Cột "Select" mặc định là false
-                };
-                model.addRow(row);
+                model.addRow(new Object[]{
+                    c.getId(),
+                    c.getStatus(),
+                    false
+                });
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi truy vấn dữ liệu");
+            JOptionPane.showMessageDialog(this, "Lỗi truy vấn dữ liệu: " + e.getMessage());
         }
     }
 
