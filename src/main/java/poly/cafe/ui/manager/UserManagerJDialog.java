@@ -9,7 +9,7 @@ import poly.cafe.entity.User;
 import poly.cafe.util.XJdbc;
 import javax.swing.JOptionPane;
 
-public final class UserManagerJDialog extends javax.swing.JFrame {
+public final class UserManagerJDialog extends javax.swing.JFrame implements CrudController<User> {
 
     private UserDAO userDAO = new UserDAOImpl();
     private List<User> userList;
@@ -18,87 +18,103 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
     public UserManagerJDialog() {
         initComponents();
         XJdbc.openConnection();
-        fillTable();
+        open();
     }
 
     public UserManagerJDialog(JFrame parent, boolean b) {
 
     }
 
-    void fillTable() {
+    @Override
+    public void open() {
+        tabsUser.setSelectedIndex(0); // Chọn tab "DANH SÁCH" mặc định
+        setLocationRelativeTo(null);
+        fillToTable();
+        loadUserListData(); // Khởi tạo userList và hiển thị user đầu tiên
+    }
+
+    @Override
+    public void fillToTable() {
         DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
         model.setRowCount(0); // clear table
 
         try {
-            List<User> list = userDAO.findAll();
-            for (User u : list) {
+            userList = userDAO.findAll(); // Gán giá trị cho userList
+            for (User u : userList) {
                 Object[] row = {
                     u.getUsername(),
                     u.getPassword(),
                     u.getFullname(),
                     u.getPhoto(),
-                    u.isManager(),
-                    u.isEnabled(),
+                    u.isManager() ? "Quản lý" : "Nhân viên",
+                    u.isEnabled() ? "Hoạt động" : "Tạm dừng",
                     false // Cột "Select" mặc định là false
                 };
                 model.addRow(row);
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi truy vấn dữ liệu");
+            JOptionPane.showMessageDialog(this, "Lỗi truy vấn dữ liệu: " + e.getMessage());
         }
     }
 
-// Chọn tất cả
-    private void selectAllRows() {
+    @Override
+    public void checkAll() {
         DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             model.setValueAt(true, i, 6); // Cột "Select" (index 6)
         }
     }
 
-// Bỏ chọn tất cả
-    private void deselectAllRows() {
+    @Override
+    public void uncheckAll() {
         DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt(false, i, 6); // Cột "Trạng thái"
+            model.setValueAt(false, i, 6); // Cột "Select"
         }
     }
 
-// Xóa các dòng được chọn
-    private void deleteSelectedRows() {
+    @Override
+    public void deleteCheckedItems() {
         DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
+        StringBuilder errorMessages = new StringBuilder();
         for (int i = model.getRowCount() - 1; i >= 0; i--) {
-            Boolean isSelected = (Boolean) model.getValueAt(i, 6); // Cột "Select" (index 6)
+            Boolean isSelected = (Boolean) model.getValueAt(i, 6);
             if (Boolean.TRUE.equals(isSelected)) {
-                String username = (String) model.getValueAt(i, 0); // Lấy username từ cột 0
+                String username = (String) model.getValueAt(i, 0);
                 try {
-                    userDAO.delete(username); // Xóa trong database
-                    model.removeRow(i); // Xóa khỏi JTable
+                    userDAO.delete(username);
+                    model.removeRow(i);
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(this, "Lỗi xóa user: " + e.getMessage());
+                    errorMessages.append("Lỗi xóa user ").append(username).append(": ").append(e.getMessage()).append("\n");
                 }
             }
         }
-        fillTable(); // Cập nhật lại bảng
+        fillToTable();
+        loadUserListData();
+        if (errorMessages.length() > 0) {
+            JOptionPane.showMessageDialog(this, "Một số user không thể xóa:\n" + errorMessages.toString());
+        }
     }
 
     void loadUserListData() {
         try {
-            List<User> list = userDAO.findAll();
-            if (!list.isEmpty()) {
+            userList = userDAO.findAll();
+            if (!userList.isEmpty()) {
                 currentRow = 0;
-                displayUserDetails(currentRow); // Hiển thị user đầu tiên
+                setForm(userList.get(currentRow)); // Hiển thị user đầu tiên
+            } else {
+                clear();
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi tải danh sách user: " + e.getMessage());
         }
     }
 
-    void displayUserDetails(int index) {
-        if (index < 0 || index >= userList.size()) {
+    @Override
+    public void setForm(User user) {
+        if (user == null) {
             return;
         }
-        User user = userList.get(index);
         txtUsername.setText(user.getUsername());
         txtPassword.setText(user.getPassword());
         txtConfirmPassword.setText(user.getPassword());
@@ -107,21 +123,23 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         chkEmployee.setSelected(!user.isManager());
         chkActive.setSelected(user.isEnabled());
         chkInactive.setSelected(!user.isEnabled());
-        currentRow = index;
+        tabsUser.setSelectedIndex(1); // Chuyển sang tab "Biểu mẫu"
     }
 
-    User getUserFromForm() {
+    @Override
+    public User getForm() {
         User user = new User();
         user.setUsername(txtUsername.getText());
         user.setPassword(txtPassword.getText());
         user.setFullname(txtFullname.getText());
-        user.setPhoto(""); // Cần xử lý nếu có upload ảnh
+        user.setPhoto("default.jpg"); // Gán giá trị mặc định, cần xử lý nếu có upload ảnh
         user.setManager(chkManager.isSelected());
         user.setEnabled(chkActive.isSelected());
         return user;
     }
 
-    void resetForm() {
+    @Override
+    public void clear() {
         txtUsername.setText("");
         txtPassword.setText("");
         txtConfirmPassword.setText("");
@@ -131,16 +149,18 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         chkActive.setSelected(false);
         chkInactive.setSelected(false);
         currentRow = -1;
+        setEditable(true); // Cho phép chỉnh sửa form
     }
 
-    void addNewUser() {
+    @Override
+    public void create() {
         if (!validateUserForm()) {
             return;
         }
-        User user = getUserFromForm();
+        User user = getForm();
         try {
             userDAO.insert(user);
-            fillTable();
+            fillToTable();
             loadUserListData();
             JOptionPane.showMessageDialog(this, "Thêm user thành công!");
         } catch (Exception e) {
@@ -148,14 +168,15 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         }
     }
 
-    void updateUser() {
+    @Override
+    public void update() {
         if (!validateUserForm()) {
             return;
         }
-        User user = getUserFromForm();
+        User user = getForm();
         try {
             userDAO.update(user);
-            fillTable();
+            fillToTable();
             loadUserListData();
             JOptionPane.showMessageDialog(this, "Cập nhật user thành công!");
         } catch (Exception e) {
@@ -163,7 +184,8 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         }
     }
 
-    void deleteUser() {
+    @Override
+    public void delete() {
         String username = txtUsername.getText();
         if (username.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập tên đăng nhập!");
@@ -173,13 +195,82 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 userDAO.delete(username);
-                fillTable();
+                fillToTable();
                 loadUserListData();
-                resetForm();
+                clear();
                 JOptionPane.showMessageDialog(this, "Xóa user thành công!");
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Lỗi xóa user: " + e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public void edit() {
+        int selectedRow = tblUsers.getSelectedRow();
+        if (selectedRow >= 0) {
+            currentRow = selectedRow;
+            User user = userList.get(currentRow);
+            setForm(user);
+            setEditable(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một user từ bảng!");
+        }
+    }
+
+    @Override
+    public void setEditable(boolean editable) {
+        txtUsername.setEnabled(editable);
+        txtPassword.setEnabled(editable);
+        txtConfirmPassword.setEnabled(editable);
+        txtFullname.setEnabled(editable);
+        chkManager.setEnabled(editable);
+        chkEmployee.setEnabled(editable);
+        chkActive.setEnabled(editable);
+        chkInactive.setEnabled(editable);
+        btnNew.setEnabled(editable);
+        btnUpdate.setEnabled(editable);
+        btnDelete.setEnabled(editable);
+        btnReset.setEnabled(editable);
+    }
+
+    @Override
+    public void moveFirst() {
+        if (userList != null && !userList.isEmpty()) {
+            currentRow = 0;
+            setForm(userList.get(currentRow));
+        }
+    }
+
+    @Override
+    public void movePrevious() {
+        if (userList != null && currentRow > 0) {
+            currentRow--;
+            setForm(userList.get(currentRow));
+        }
+    }
+
+    @Override
+    public void moveNext() {
+        if (userList != null && currentRow < userList.size() - 1) {
+            currentRow++;
+            setForm(userList.get(currentRow));
+        }
+    }
+
+    @Override
+    public void moveLast() {
+        if (userList != null && !userList.isEmpty()) {
+            currentRow = userList.size() - 1;
+            setForm(userList.get(currentRow));
+        }
+    }
+
+    @Override
+    public void moveTo(int rowIndex) {
+        if (userList != null && rowIndex >= 0 && rowIndex < userList.size()) {
+            currentRow = rowIndex;
+            setForm(userList.get(currentRow));
         }
     }
 
@@ -204,8 +295,16 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn vai trò!");
             return false;
         }
+        if (chkManager.isSelected() && chkEmployee.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Chỉ được chọn một vai trò (Quản lý hoặc Nhân viên)!");
+            return false;
+        }
         if (!chkActive.isSelected() && !chkInactive.isSelected()) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn trạng thái!");
+            return false;
+        }
+        if (chkActive.isSelected() && chkInactive.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Chỉ được chọn một trạng thái (Hoạt động hoặc Tạm dừng)!");
             return false;
         }
         return true;
@@ -366,6 +465,11 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         });
 
         btnLast.setText(">|");
+        btnLast.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLastActionPerformed(evt);
+            }
+        });
 
         btnFirst.setText("<<");
         btnFirst.addActionListener(new java.awt.event.ActionListener() {
@@ -382,6 +486,11 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         });
 
         btnPrevious.setText("|<");
+        btnPrevious.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPreviousActionPerformed(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel1.setText("Tên đăng nhập");
@@ -402,12 +511,32 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         jLabel6.setText("Vai trò");
 
         chkManager.setText("Quản lý");
+        chkManager.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkManagerActionPerformed(evt);
+            }
+        });
 
         chkEmployee.setText("Nhân viên");
+        chkEmployee.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkEmployeeActionPerformed(evt);
+            }
+        });
 
         chkInactive.setText("Tạm dừng");
+        chkInactive.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkInactiveActionPerformed(evt);
+            }
+        });
 
         chkActive.setText("Hoạt động");
+        chkActive.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkActiveActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout pnlDetailLayout = new javax.swing.GroupLayout(pnlDetail);
         pnlDetail.setLayout(pnlDetailLayout);
@@ -542,40 +671,72 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
-        // TODO add your handling code here:
+        moveNext();
     }//GEN-LAST:event_btnNextActionPerformed
 
     private void btnFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFirstActionPerformed
-        // TODO add your handling code here:
+        moveFirst();
     }//GEN-LAST:event_btnFirstActionPerformed
 
     private void btnSelectAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectAllActionPerformed
-        selectAllRows();
+        checkAll();
     }//GEN-LAST:event_btnSelectAllActionPerformed
 
     private void btnClearSelectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearSelectionActionPerformed
-        deleteSelectedRows();
+        deleteCheckedItems();
     }//GEN-LAST:event_btnClearSelectionActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        deleteUser();
+        delete();
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
-        updateUser();
+        update();
     }//GEN-LAST:event_btnUpdateActionPerformed
 
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
-        addNewUser();
+        create();
     }//GEN-LAST:event_btnNewActionPerformed
 
     private void btnUnselectAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnselectAllActionPerformed
-        deselectAllRows();
+        uncheckAll();
     }//GEN-LAST:event_btnUnselectAllActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
-        resetForm();
+        clear();
     }//GEN-LAST:event_btnResetActionPerformed
+
+    private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
+        movePrevious();
+    }//GEN-LAST:event_btnPreviousActionPerformed
+
+    private void btnLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLastActionPerformed
+        moveLast();
+    }//GEN-LAST:event_btnLastActionPerformed
+
+    private void chkActiveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkActiveActionPerformed
+        if (chkInactive.isSelected()) {
+            chkInactive.setSelected(false);
+        }
+    }//GEN-LAST:event_chkActiveActionPerformed
+
+    private void chkInactiveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkInactiveActionPerformed
+        if (chkActive.isSelected()) {
+            chkActive.setSelected(false);
+        }
+    }//GEN-LAST:event_chkInactiveActionPerformed
+
+    private void chkEmployeeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkEmployeeActionPerformed
+        if (chkEmployee.isSelected()) {
+            chkManager.setSelected(false);
+        }
+    }//GEN-LAST:event_chkEmployeeActionPerformed
+
+    private void chkManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkManagerActionPerformed
+        if (chkManager.isSelected()) {
+            chkEmployee.setSelected(false); // Bỏ chọn "Nhân viên" nếu "Quản lý" được chọn
+        }
+    }//GEN-LAST:event_chkManagerActionPerformed
 
     /**
      * @param args the command line arguments
@@ -606,6 +767,17 @@ public final class UserManagerJDialog extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(UserManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {

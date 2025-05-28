@@ -1,22 +1,35 @@
 package poly.cafe.ui.manager;
 
 import java.util.List;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import poly.cafe.dao.impl.CardDAOImpl;
 import poly.cafe.entity.Card;
+import poly.cafe.util.XJdbc;
 
-public class CardManagerJDialog extends javax.swing.JFrame {
+public class CardManagerJDialog extends JDialog {
 
-    public CardManagerJDialog() {
-        initComponents();
+    public CardManagerJDialog(JFrame frame) {
+        this(frame, true);
     }
 
     public CardManagerJDialog(JFrame frame, boolean modal) {
-        super(); // hoặc super(frame, modal) nếu kế thừa JDialog
+        super(frame, modal);
+        init();
         initComponents();
-        fillTable(); // load dữ liệu khi mở
+        fillTable();
+    }
+
+    public void init() {
+        this.setTitle("Quản lý thẻ định danh"); // Sửa title cho phù hợp
+        this.setSize(800, 600);
+        try {
+            XJdbc.openConnection();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối database: " + e.getMessage());
+        }
     }
 
     CardDAOImpl cardDAO = new CardDAOImpl();
@@ -252,11 +265,6 @@ public class CardManagerJDialog extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -264,23 +272,16 @@ public class CardManagerJDialog extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(CardManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(CardManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(CardManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(CardManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new CardManagerJDialog().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            JFrame hiddenFrame = new JFrame();
+            hiddenFrame.setUndecorated(true);
+            hiddenFrame.setSize(0, 0);
+            hiddenFrame.setVisible(true);
+            new CardManagerJDialog(hiddenFrame).setVisible(true);
         });
     }
 

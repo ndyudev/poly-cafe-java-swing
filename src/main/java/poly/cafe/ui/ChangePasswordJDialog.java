@@ -1,18 +1,73 @@
 package poly.cafe.ui;
 
 import javax.swing.JFrame;
+import poly.cafe.dao.UserDAO;
+import poly.cafe.dao.impl.UserDAOImpl;
+import poly.cafe.ui.manager.PolyCafeJFrameManager;
+import poly.cafe.util.XAuth;
+import poly.cafe.util.XDialog;
 
-public class ChangePasswordJDialog extends javax.swing.JDialog {
+public class ChangePasswordJDialog extends javax.swing.JFrame implements ChangePasswordController {
 
-    /**
-     * Creates new form ChangePasswordJDialog
-     */
+    private JFrame parent;
+    UserDAO dao = new UserDAOImpl();
     public ChangePasswordJDialog(JFrame parent) {
-        super(parent, true);
-        if (parent != null) {
-            parent.dispose(); // đóng luôn JFrame cha
-        }
+        this.parent = parent;
         initComponents();
+        open();
+    }
+
+    private void showPolyCafeJFrameManager() {
+        PolyCafeJFrameManager frame = new PolyCafeJFrameManager(parent);
+        frame.setVisible(true);
+        frame.setLocationRelativeTo(null);
+        this.dispose();
+    }
+
+    @Override
+    public void open() {
+        this.setLocationRelativeTo(null);
+    }
+
+    @Override
+    public void close() {
+        this.dispose();
+    }
+
+    @Override
+    public void save() {
+        String username = txtUsername.getText().trim();
+        String password = new String(txtPassword.getPassword()).trim();
+        String newpass = new String(txtNewpass.getPassword()).trim();
+        String confirm = new String(txtConfirm.getPassword()).trim();
+
+        if (username.isEmpty() || password.isEmpty() || newpass.isEmpty() || confirm.isEmpty()) {
+            XDialog.alert("Vui lòng điền đầy đủ thông tin!");
+            return;
+        }
+
+        if (XAuth.user == null) {
+            XDialog.alert("Bạn chưa đăng nhập!");
+            return;
+        }
+
+        if (!newpass.equals(confirm)) {
+            XDialog.alert("Xác nhận mật khẩu không đúng!");
+        } else if (!username.equals(XAuth.user.getUsername())) {
+            XDialog.alert("Sai tên đăng nhập!");
+        } else if (!password.equals(XAuth.user.getPassword())) {
+            XDialog.alert("Sai mật khẩu!");
+        } else {
+            try {
+                XAuth.user.setPassword(newpass);
+                dao.update(XAuth.user);
+                XDialog.alert("Đổi mật khẩu thành công!");
+                showPolyCafeJFrameManager();
+                close();
+            } catch (Exception e) {
+                XDialog.alert("Lỗi khi cập nhật mật khẩu: " + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -30,12 +85,12 @@ public class ChangePasswordJDialog extends javax.swing.JDialog {
         TenDangNhap = new javax.swing.JLabel();
         vertifyPassword = new javax.swing.JLabel();
         Password = new javax.swing.JLabel();
-        txtPassword = new javax.swing.JTextField();
-        txtUser = new javax.swing.JTextField();
-        txtVertifyPassword = new javax.swing.JTextField();
-        txtNewPassword = new javax.swing.JTextField();
+        txtUsername = new javax.swing.JTextField();
         Save = new javax.swing.JButton();
         Close = new javax.swing.JButton();
+        txtConfirm = new javax.swing.JPasswordField();
+        txtNewpass = new javax.swing.JPasswordField();
+        txtPassword = new javax.swing.JPasswordField();
 
         setTitle("Đổi mật khẩu");
 
@@ -55,8 +110,36 @@ public class ChangePasswordJDialog extends javax.swing.JDialog {
         Password.setText("Mật khẩu hiện tại:");
 
         Save.setText("Lưu");
+        Save.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SaveActionPerformed(evt);
+            }
+        });
 
         Close.setText("Đóng");
+        Close.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CloseActionPerformed(evt);
+            }
+        });
+
+        txtConfirm.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtConfirmActionPerformed(evt);
+            }
+        });
+
+        txtNewpass.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtNewpassActionPerformed(evt);
+            }
+        });
+
+        txtPassword.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtPasswordActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -71,57 +154,82 @@ public class ChangePasswordJDialog extends javax.swing.JDialog {
                         .addGap(11, 11, 11)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(newPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(TenDangNhap, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtNewPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(130, Short.MAX_VALUE))
+                            .addComponent(txtNewpass, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(54, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtVertifyPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(Password)
-                    .addComponent(vertifyPassword))
-                .addGap(81, 81, 81))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(Save)
-                .addGap(18, 18, 18)
-                .addComponent(Close)
-                .addContainerGap())
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(Save)
+                        .addGap(18, 18, 18)
+                        .addComponent(Close))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(Password)
+                            .addComponent(vertifyPassword)
+                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(34, 34, 34))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(27, 27, 27)
                 .addComponent(lblchangePassword)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(TenDangNhap)
-                    .addComponent(Password))
-                .addGap(30, 30, 30)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtUser, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(newPassword)
-                    .addComponent(vertifyPassword))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 20, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtNewPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtVertifyPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(57, 57, 57)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(Save)
-                    .addComponent(Close))
-                .addGap(42, 42, 42))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(TenDangNhap)
+                            .addComponent(Password))
+                        .addGap(30, 30, 30)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(49, 49, 49)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(newPassword)
+                            .addComponent(vertifyPassword))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtNewpass, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(42, 97, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(Save)
+                            .addComponent(Close))
+                        .addGap(26, 26, 26))))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void txtPasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPasswordActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtPasswordActionPerformed
+
+    private void txtConfirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtConfirmActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtConfirmActionPerformed
+
+    private void txtNewpassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNewpassActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtNewpassActionPerformed
+
+    private void CloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CloseActionPerformed
+        close();
+    }//GEN-LAST:event_CloseActionPerformed
+
+    private void SaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveActionPerformed
+        save();
+    }//GEN-LAST:event_SaveActionPerformed
 
     /**
      * @param args the command line arguments
@@ -166,10 +274,10 @@ public class ChangePasswordJDialog extends javax.swing.JDialog {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JLabel lblchangePassword;
     private javax.swing.JLabel newPassword;
-    private javax.swing.JTextField txtNewPassword;
-    private javax.swing.JTextField txtPassword;
-    private javax.swing.JTextField txtUser;
-    private javax.swing.JTextField txtVertifyPassword;
+    private javax.swing.JPasswordField txtConfirm;
+    private javax.swing.JPasswordField txtNewpass;
+    private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JTextField txtUsername;
     private javax.swing.JLabel vertifyPassword;
     // End of variables declaration//GEN-END:variables
 }

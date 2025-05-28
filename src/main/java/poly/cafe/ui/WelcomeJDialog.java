@@ -1,22 +1,22 @@
 package poly.cafe.ui;
 
-import javax.swing.JFrame;
-import javax.swing.JDialog;
+import javax.swing.*;
 
 public class WelcomeJDialog extends JDialog implements WelcomeController {
 
-    /**
-     * Creates new form WelcomeJDialog
-     */
+    private JFrame parent;
+
     public WelcomeJDialog() {
+        super((JFrame) null, true);
         initComponents();
-        waiting(); // Gọi waiting() để căn giữa
+        waiting();
     }
 
     public WelcomeJDialog(JFrame parent, boolean modal) {
-        super(parent, modal);
+        super(parent, modal); // dùng constructor của JDialog
+        this.parent = parent;
         initComponents();
-        waiting(); // Gọi waiting() để căn giữa
+        waiting();
     }
 
     @Override
@@ -24,16 +24,18 @@ public class WelcomeJDialog extends JDialog implements WelcomeController {
         this.setLocationRelativeTo(null);
         new Thread(() -> {
             for (int i = 0; i <= 100; i++) {
-                progressBar.setValue(i);
+                final int progress = i;
+                SwingUtilities.invokeLater(() -> progressBar.setValue(progress));
                 try {
-                    Thread.sleep(50); // Chờ 50ms mỗi lần tăng
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            // Sau khi progress bar đạt 100%, mở cửa sổ tiếp theo
-            this.dispose();
-            new poly.cafe.ui.LoginJDialog().setVisible(true);
+            SwingUtilities.invokeLater(() -> {
+                this.dispose();
+                new LoginJDialog(parent, true).setVisible(true);
+            });
         }).start();
     }
 
@@ -87,7 +89,6 @@ public class WelcomeJDialog extends JDialog implements WelcomeController {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -95,21 +96,16 @@ public class WelcomeJDialog extends JDialog implements WelcomeController {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(WelcomeJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(WelcomeJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(WelcomeJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(WelcomeJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new WelcomeJDialog().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            JFrame hiddenFrame = new JFrame();
+            hiddenFrame.setUndecorated(true);
+            hiddenFrame.setSize(0, 0);
+            hiddenFrame.setVisible(true);
+            new WelcomeJDialog(hiddenFrame, true).setVisible(true);
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -3,30 +3,32 @@ package poly.cafe.ui;
 import poly.cafe.util.XAuth;
 import poly.cafe.util.XIcon;
 
-public class PolyCafeJFrame extends javax.swing.JFrame {
+public class PolyCafeJFrame extends javax.swing.JFrame implements PolyCafeController {
 
-    /**
-     * Creates new form PolyCafeJFrame
-     */
     public PolyCafeJFrame() {
         initComponents();
+        setLocationRelativeTo(null);
+        init(); // Gọi init() nếu cần
     }
 
-//    @Override
-//    public void init() {
+    @Override
+    public void init() {
 //        this.setIconImage(XIcon.getIcon("trump-small.png").getImage());
 //        this.setLocationRelativeTo(null);
-//
-//        this.showWelcomeJDialog(this);
-//        this.showLoginJDialog(this);
-//
-//        XIcon.setIcon(lblPhoto, "photos/" + XAuth.user.getPhoto());
-//        lblFullname.setText(XAuth.user.getFullname());
-//
-//        if (!XAuth.user.isManager()) {
-//            pnlCenter.remove(pnlManager);
+
+        // Hiển thị thông tin người dùng
+//        if (XAuth.user != null) {
+//            XIcon.setIcon(lblPhoto, "photos/" + XAuth.user.getPhoto());
+//            lblFullname.setText(XAuth.user.getFullname());
+//        } else {
+//            lblFullname.setText("Không có thông tin người dùng");
 //        }
-//    }
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose(); // Gọi dispose của JFrame
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -43,12 +45,13 @@ public class PolyCafeJFrame extends javax.swing.JFrame {
         Password = new javax.swing.JButton();
         Close = new javax.swing.JButton();
         PanelIMG = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
         panelAvatar = new javax.swing.JPanel();
-        lblName = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        lblFullname = new javax.swing.JLabel();
+        lblPhoto = new javax.swing.JLabel();
+        lblPolyCafe = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Poly Cafe");
 
         PanelButton.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED, new java.awt.Color(204, 0, 102), new java.awt.Color(255, 51, 102), new java.awt.Color(51, 0, 204), new java.awt.Color(153, 0, 153)));
 
@@ -90,11 +93,14 @@ public class PolyCafeJFrame extends javax.swing.JFrame {
                 .addGroup(PanelButtonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(Password)
                     .addComponent(BanHang, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(PanelButtonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(Close, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(History, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(252, 252, 252))
+                    .addGroup(PanelButtonLayout.createSequentialGroup()
+                        .addComponent(Close, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(252, 252, 252))
+                    .addGroup(PanelButtonLayout.createSequentialGroup()
+                        .addComponent(History, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         PanelButtonLayout.setVerticalGroup(
             PanelButtonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -112,55 +118,58 @@ public class PolyCafeJFrame extends javax.swing.JFrame {
 
         PanelIMG.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jLabel1.setIcon(new javax.swing.ImageIcon("C:\\Users\\Chau Nhat Duy\\Documents\\Java-Swing-Project\\PS44284_ChauNhatDuy_SOF2043\\PS44284_ChauNhatDuy_SOF2043\\src\\main\\java\\poly\\cafe\\icons\\coffee-shop.jpg")); // NOI18N
-        jLabel1.setText("jLabel1");
-        PanelIMG.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, -50, 800, 470));
-
         panelAvatar.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        lblName.setForeground(new java.awt.Color(255, 102, 0));
-        lblName.setText("Châu Nhật Duy");
+        lblFullname.setForeground(new java.awt.Color(255, 102, 0));
+        lblFullname.setText("Châu Nhật Duy");
 
-        jLabel3.setIcon(new javax.swing.ImageIcon("C:\\Users\\Chau Nhat Duy\\Documents\\Java-Swing-Project\\PS44284_ChauNhatDuy_SOF2043\\PS44284_ChauNhatDuy_SOF2043\\src\\main\\java\\poly\\cafe\\icons\\avatar.jpg")); // NOI18N
-        jLabel3.setText("jLabel3");
+        lblPhoto.setIcon(new javax.swing.ImageIcon("C:\\Users\\Chau Nhat Duy\\Documents\\Java-Swing-Project\\PS44284_ChauNhatDuy_SOF2043\\PS44284_ChauNhatDuy_SOF2043\\src\\main\\java\\poly\\cafe\\icons\\avatar.jpg")); // NOI18N
+        lblPhoto.setText("jLabel1");
+
+        lblPolyCafe.setIcon(new javax.swing.ImageIcon("C:\\Users\\Chau Nhat Duy\\Documents\\Java-Swing-Project\\PS44284_ChauNhatDuy_SOF2043\\PS44284_ChauNhatDuy_SOF2043\\src\\main\\java\\poly\\cafe\\icons\\coffee-shop.jpg")); // NOI18N
+        lblPolyCafe.setText("jLabel2");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblName, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(106, 106, 106))
+                    .addComponent(PanelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 284, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(panelAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(91, 91, 91)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(panelAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(PanelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 284, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                .addComponent(PanelIMG, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(lblPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblFullname, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(PanelIMG, javax.swing.GroupLayout.DEFAULT_SIZE, 809, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblPolyCafe, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(PanelIMG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(41, 41, 41)
                         .addComponent(panelAvatar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblName)
-                        .addGap(90, 90, 90)
-                        .addComponent(PanelButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(0, 0, Short.MAX_VALUE))
+                        .addGap(138, 138, 138))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(lblPhoto)
+                        .addGap(54, 54, 54)))
+                .addComponent(lblFullname)
+                .addGap(69, 69, 69)
+                .addComponent(PanelButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(PanelIMG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lblPolyCafe, javax.swing.GroupLayout.PREFERRED_SIZE, 475, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -224,9 +233,9 @@ public class PolyCafeJFrame extends javax.swing.JFrame {
     private javax.swing.JPanel PanelButton;
     private javax.swing.JPanel PanelIMG;
     private javax.swing.JButton Password;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel lblName;
+    private javax.swing.JLabel lblFullname;
+    private javax.swing.JLabel lblPhoto;
+    private javax.swing.JLabel lblPolyCafe;
     private javax.swing.JPanel panelAvatar;
     // End of variables declaration//GEN-END:variables
 }

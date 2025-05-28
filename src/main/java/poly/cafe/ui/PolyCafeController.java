@@ -1,12 +1,7 @@
 package poly.cafe.ui;
 
+import java.awt.Window;
 import javax.swing.JFrame;
-import poly.cafe.ui.manager.BillManagerJDialog;
-import poly.cafe.ui.manager.CardManagerJDialog;
-import poly.cafe.ui.manager.CategoryManagerJDialog;
-import poly.cafe.ui.manager.DrinkManagerJDialog;
-import poly.cafe.ui.manager.RevenueManagerJDialog;
-import poly.cafe.ui.manager.UserManagerJDialog;
 import poly.cafe.util.XDialog;
 
 public interface PolyCafeController {
@@ -19,62 +14,27 @@ public interface PolyCafeController {
         }
     }
 
-    // Đổi từ JDialog sang JFrame
-    default void showJFrame(JFrame frame) {
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+    default void showWindow(Window window) {
+        window.setLocationRelativeTo(null);
+        window.setVisible(true);
     }
 
-    default void showLoginJDialog(JFrame frame) {
-        this.showJFrame(new LoginJDialog(frame, true));
+    // Phương thức chung để mở các cửa sổ (không quy định cụ thể JFrame hay JDialog)
+    default void showMainWindow(JFrame frame) {
+        showWindow(frame);
     }
 
-    default void showSalesJDialog(JFrame parent) {
-        this.showJFrame(new SalesJDialog(parent, true));
-        this.dispose();
+    default void showLoginWindow(JFrame frame) {
+        showWindow(frame);
     }
 
-    default void showHistoryJDialog(JFrame parent) {
-        this.showJFrame(new HistoryJDialog(parent, true));
-        this.dispose();
+    default void showWelcomeWindow(JFrame frame) {
+        showWindow(frame);
     }
 
-    default void showDrinkManagerJDialog(JFrame parent) {
-        this.showJFrame(new DrinkManagerJDialog(parent, true));
-        this.dispose();
+    // Loại bỏ các phương thức cụ thể cho JDialog (như showSalesJDialog, showChangePasswordJDialog, v.v.)
+    // Thay bằng các phương thức chung nếu cần
+    default void showManagerWindow(JFrame frame) {
+        showWindow(frame);
     }
-
-    default void showCategoryManagerJDialog(JFrame parent) {
-        this.showJFrame(new CategoryManagerJDialog(parent, true));
-        this.dispose();
-    }
-
-    default void showCardManagerJDialog(JFrame parent) {
-        this.showJFrame(new CardManagerJDialog(parent, true));
-        this.dispose();
-    }
-
-    default void showBillManagerJDialog(JFrame parent) {
-        this.showJFrame(new BillManagerJDialog(parent, true));
-        this.dispose();
-    }
-
-    default void showUserManagerJDialog(JFrame parent) {
-        this.showJFrame(new UserManagerJDialog(parent, true));
-        this.dispose();
-    }
-
-    default void showRevenueManagerJDialog(JFrame parent) {
-        this.showJFrame(new RevenueManagerJDialog(parent, true));
-        this.dispose();
-    }
-
-    default void showChangePasswordJDialog(JFrame parent) {
-        this.showDialog(new ChangePasswordJDialog(parent));
-         this.dispose();
-    }
-
-    public void dispose();
-
-    public void showDialog(ChangePasswordJDialog changePasswordJDialog);
 }
