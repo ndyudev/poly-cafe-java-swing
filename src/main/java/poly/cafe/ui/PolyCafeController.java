@@ -31,38 +31,38 @@ public interface PolyCafeController {
         dialog.setVisible(true);
     }
     default void showWelcomeJDialog(JFrame frame){
-        this.showJDialog(new WelcomejDialog(frame, true));
+//        this.showJDialog(new WelcomejDialog(frame, true));
     }
     default void showLoginJDialog(JFrame frame){
         this.showJDialog(new LoginJDialog(frame, true));
     }
     default void showChangePasswordJDialog(JFrame frame){
-        this.showJDialog(new ChangePasswordJDialog(frame, true));
+//        this.showJDialog(new ChangePasswordJDialog(frame, true));
     }
     default void showSalesJDialog(JFrame frame){
-        this.showJDialog(new SalesJDialog(frame, true));
+//        this.showJDialog(new SalesJDialog(frame, true));
     }
     default void showHistoryJDialog(JFrame frame){
-        this.showJDialog(new HistoryJDialog(frame, true));
+//        this.showJDialog(new HistoryJDialog(frame, true));
     }
     
     default void showDrinkManagerJDialog(JFrame frame){
-        this.showJDialog(new DrinkManagerJDialog(frame, true));
+//        this.showJDialog(new DrinkManagerJDialog(frame, true));
     }
     default void showCategoryManagerJDialog(JFrame frame){
-        this.showJDialog(new CategoryManagerJDialog(frame, true));
+//        this.showJDialog(new CategoryManagerJDialog(frame, true));
     }
     default void showCardManagerJDialog(JFrame frame){
-        this.showJDialog(new CardManagerJDialog(frame, true));
+//        this.showJDialog(new CardManagerJDialog(frame, true));
     }
     default void showBillManagerJDialog(JFrame frame){
-        this.showJDialog(new BillManagerJDialog(frame, true));
+//        this.showJDialog(new BillManagerJDialog(frame, true));
     }
     default void showUserManagerJDialog(JFrame frame){
-        this.showJDialog(new UserManagerJDialog(frame, true));
+//        this.showJDialog(new UserManagerJDialog(frame, true));
     }
     default void showRevenueManagerJDialog(JFrame frame){
-        this.showJDialog(new RevenueManagerJDialog(frame, true));
+//        this.showJDialog(new RevenueManagerJDialog(frame, true));
     }
     
 }

@@ -3,7 +3,6 @@ package poly.cafe.ui;
 import javax.swing.JFrame;
 import poly.cafe.dao.UserDAO;
 import poly.cafe.dao.impl.UserDAOImpl;
-import poly.cafe.ui.manager.PolyCafeJFrameManager;
 import poly.cafe.util.XAuth;
 import poly.cafe.util.XDialog;
 
@@ -15,13 +14,6 @@ public class ChangePasswordJDialog extends javax.swing.JFrame implements ChangeP
         this.parent = parent;
         initComponents();
         open();
-    }
-
-    private void showPolyCafeJFrameManager() {
-        PolyCafeJFrameManager frame = new PolyCafeJFrameManager(parent);
-        frame.setVisible(true);
-        frame.setLocationRelativeTo(null);
-        this.dispose();
     }
 
     @Override
@@ -62,7 +54,6 @@ public class ChangePasswordJDialog extends javax.swing.JFrame implements ChangeP
                 XAuth.user.setPassword(newpass);
                 dao.update(XAuth.user);
                 XDialog.alert("Đổi mật khẩu thành công!");
-                showPolyCafeJFrameManager();
                 close();
             } catch (Exception e) {
                 XDialog.alert("Lỗi khi cập nhật mật khẩu: " + e.getMessage());
