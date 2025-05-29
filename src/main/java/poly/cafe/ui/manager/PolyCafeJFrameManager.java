@@ -2,7 +2,6 @@ package poly.cafe.ui.manager;
 
 import poly.cafe.ui.PolyCafeController;
 import poly.cafe.ui.ChangePasswordJDialog;
-import poly.cafe.util.DatabaseSQL;
 import poly.cafe.util.XJdbc;
 
 public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCafeController {
@@ -11,10 +10,6 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
         initComponents();
     }
 
-
-    public PolyCafeJFrameManager() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
 
 
     
@@ -345,11 +340,5 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
         this.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
         // Thêm logic kết nối nếu cần
          XJdbc.openConnection();
-    }
-
-    @Override
-    public void showDialog(ChangePasswordJDialog changePasswordJDialog) {
-        changePasswordJDialog.setLocationRelativeTo(null);
-        changePasswordJDialog.setVisible(true);
     }
 }

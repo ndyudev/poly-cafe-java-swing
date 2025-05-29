@@ -1,7 +1,6 @@
 package poly.cafe.ui.manager;
 
 import java.util.List;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import poly.cafe.dao.impl.CardDAOImpl;
@@ -12,13 +11,6 @@ public class CardManagerJDialog extends javax.swing.JFrame {
 
     public CardManagerJDialog() {
         initComponents();
-    }
-
-    public CardManagerJDialog(JFrame frame, boolean modal) {
-        init();
-        super(); // hoặc super(frame, modal) nếu kế thừa JDialog
-        initComponents();
-        fillTable(); // load dữ liệu khi mở
     }
 
     CardDAOImpl cardDAO = new CardDAOImpl();
