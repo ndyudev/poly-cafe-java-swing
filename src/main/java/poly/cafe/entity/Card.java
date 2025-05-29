@@ -11,6 +11,6 @@ import lombok.Data;
 @Data
 
 public class Card {
-    private Integer id;
-    private int status;
+    private Integer Id;
+    private int Status;
 }

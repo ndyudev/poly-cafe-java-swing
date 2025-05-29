@@ -1,359 +1,391 @@
 package poly.cafe.ui.manager;
 
-import java.util.List;
-import javax.swing.JFrame;
-import javax.swing.table.DefaultTableModel;
 import poly.cafe.dao.UserDAO;
 import poly.cafe.dao.impl.UserDAOImpl;
 import poly.cafe.entity.User;
-import poly.cafe.util.XJdbc;
-import javax.swing.JOptionPane;
+import poly.cafe.util.XAuth;
+import poly.cafe.util.XDialog;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
-public final class UserManagerJDialog extends javax.swing.JFrame implements CrudController<User> {
+public class UserManagerJDialog extends javax.swing.JDialog implements UserController {
 
-    private UserDAO userDAO = new UserDAOImpl();
+    private UserDAO userDAO;
     private List<User> userList;
     private int currentRow = -1;
+    private final String DEFAULT_PHOTO = "photo.png";
 
-    public UserManagerJDialog() {
+    public UserManagerJDialog(java.awt.Frame parent, boolean modal) {
+        super(parent, modal);
+        userDAO = new UserDAOImpl();
         initComponents();
-        XJdbc.openConnection();
+        init();
         open();
-    }
-
-    public UserManagerJDialog(JFrame parent, boolean b) {
-
     }
 
     @Override
     public void open() {
-        tabsUser.setSelectedIndex(0); // Chọn tab "DANH SÁCH" mặc định
+        setTitle("Quản lý người dùng");
         setLocationRelativeTo(null);
         fillToTable();
-        loadUserListData(); // Khởi tạo userList và hiển thị user đầu tiên
-    }
-
-    @Override
-    public void fillToTable() {
-        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
-        model.setRowCount(0); // clear table
-
-        try {
-            userList = userDAO.findAll(); // Gán giá trị cho userList
-            for (User u : userList) {
-                Object[] row = {
-                    u.getUsername(),
-                    u.getPassword(),
-                    u.getFullname(),
-                    u.getPhoto(),
-                    u.isManager() ? "Quản lý" : "Nhân viên",
-                    u.isEnabled() ? "Hoạt động" : "Tạm dừng",
-                    false // Cột "Select" mặc định là false
-                };
-                model.addRow(row);
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi truy vấn dữ liệu: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public void checkAll() {
-        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt(true, i, 6); // Cột "Select" (index 6)
-        }
-    }
-
-    @Override
-    public void uncheckAll() {
-        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt(false, i, 6); // Cột "Select"
-        }
-    }
-
-    @Override
-    public void deleteCheckedItems() {
-        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
-        StringBuilder errorMessages = new StringBuilder();
-        for (int i = model.getRowCount() - 1; i >= 0; i--) {
-            Boolean isSelected = (Boolean) model.getValueAt(i, 6);
-            if (Boolean.TRUE.equals(isSelected)) {
-                String username = (String) model.getValueAt(i, 0);
-                try {
-                    userDAO.delete(username);
-                    model.removeRow(i);
-                } catch (Exception e) {
-                    errorMessages.append("Lỗi xóa user ").append(username).append(": ").append(e.getMessage()).append("\n");
-                }
-            }
-        }
-        fillToTable();
-        loadUserListData();
-        if (errorMessages.length() > 0) {
-            JOptionPane.showMessageDialog(this, "Một số user không thể xóa:\n" + errorMessages.toString());
-        }
-    }
-
-    void loadUserListData() {
-        try {
-            userList = userDAO.findAll();
-            if (!userList.isEmpty()) {
-                currentRow = 0;
-                setForm(userList.get(currentRow)); // Hiển thị user đầu tiên
-            } else {
-                clear();
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách user: " + e.getMessage());
-        }
+        setEditable(false);
+        updateNavigationButtons();
     }
 
     @Override
     public void setForm(User user) {
-        if (user == null) {
-            return;
-        }
         txtUsername.setText(user.getUsername());
+        txtFullname.setText(user.getFullname());
         txtPassword.setText(user.getPassword());
         txtConfirmPassword.setText(user.getPassword());
-        txtFullname.setText(user.getFullname());
-        chkManager.setSelected(user.isManager());
-        chkEmployee.setSelected(!user.isManager());
-        chkActive.setSelected(user.isEnabled());
-        chkInactive.setSelected(!user.isEnabled());
-        tabsUser.setSelectedIndex(1); // Chuyển sang tab "Biểu mẫu"
+        chkAdmin.setSelected(user.isManager());
+        chkEmloyee.setSelected(!user.isManager());
+        chkActivate.setSelected(user.isEnabled());
+        chkPause.setSelected(!user.isEnabled());
     }
 
     @Override
     public User getForm() {
-        User user = new User();
-        user.setUsername(txtUsername.getText());
-        user.setPassword(txtPassword.getText());
-        user.setFullname(txtFullname.getText());
-        user.setPhoto("default.jpg"); // Gán giá trị mặc định, cần xử lý nếu có upload ảnh
-        user.setManager(chkManager.isSelected());
-        user.setEnabled(chkActive.isSelected());
-        return user;
+        if (!validateForm()) {
+            return null;
+        }
+
+        String username = txtUsername.getText().trim();
+        String password = new String(txtPassword.getPassword()).trim();
+        String fullname = txtFullname.getText().trim();
+        boolean manager = chkAdmin.isSelected();
+        boolean enabled = chkActivate.isSelected();
+
+        return User.builder()
+                .Username(username)
+                .Password(password)
+                .Fullname(fullname)
+                .Manager(manager)
+                .Enabled(enabled)
+                .Photo("")
+                .build();
+    }
+
+    private boolean validateForm() {
+        String username = txtUsername.getText().trim();
+        String password = new String(txtPassword.getPassword()).trim();
+        String confirmPassword = new String(txtConfirmPassword.getPassword()).trim();
+        String fullname = txtFullname.getText().trim();
+
+        if (username.isEmpty() || password.isEmpty() || fullname.isEmpty()) {
+            XDialog.alert("Vui lòng nhập đầy đủ thông tin!");
+            return false;
+        }
+
+        if (!password.equals(confirmPassword)) {
+            XDialog.alert("Mật khẩu xác nhận không khớp!");
+            return false;
+        }
+
+        if (txtUsername.isEditable() && userList.stream().anyMatch(u -> u.getUsername().equals(username))) {
+            XDialog.alert("Tên đăng nhập đã tồn tại!");
+            return false;
+        }
+
+        return true;
     }
 
     @Override
-    public void clear() {
-        txtUsername.setText("");
-        txtPassword.setText("");
-        txtConfirmPassword.setText("");
-        txtFullname.setText("");
-        chkManager.setSelected(false);
-        chkEmployee.setSelected(false);
-        chkActive.setSelected(false);
-        chkInactive.setSelected(false);
-        currentRow = -1;
-        setEditable(true); // Cho phép chỉnh sửa form
+    public void fillToTable() {
+        userList = userDAO.findAll();
+        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
+        model.setRowCount(0);
+
+        for (User user : userList) {
+            model.addRow(new Object[]{
+                user.getUsername(),
+                user.getPassword(),
+                user.getFullname(),
+                user.getPhoto(),
+                user.isManager() ? "Quản lý" : "Nhân viên",
+                user.isEnabled() ? "Hoạt động" : "Tạm dừng",
+                false
+            });
+        }
+        currentRow = userList.isEmpty() ? -1 : 0;
+        if (currentRow >= 0) {
+            setForm(userList.get(currentRow));
+            tblUsers.setRowSelectionInterval(currentRow, currentRow);
+        }
+        updateNavigationButtons();
+    }
+
+    @Override
+    public void edit() {
+        int row = tblUsers.getSelectedRow();
+        if (row >= 0) {
+            currentRow = row;
+            setForm(userList.get(row));
+            setEditable(true);
+            txtUsername.setEditable(false);
+            Tabs.setSelectedIndex(1);
+            updateNavigationButtons();
+        }
     }
 
     @Override
     public void create() {
-        if (!validateUserForm()) {
+        User user = getForm();
+        if (user == null) {
             return;
         }
-        User user = getForm();
+
         try {
-            userDAO.insert(user);
+            userDAO.create(user);
+            XDialog.alert("Tạo người dùng thành công!");
             fillToTable();
-            loadUserListData();
-            JOptionPane.showMessageDialog(this, "Thêm user thành công!");
+            clear();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi thêm user: " + e.getMessage());
+            XDialog.alert("Lỗi khi tạo người dùng: " + e.getMessage());
         }
     }
 
     @Override
     public void update() {
-        if (!validateUserForm()) {
+        User user = getForm();
+        if (user == null) {
             return;
         }
-        User user = getForm();
+
         try {
             userDAO.update(user);
+            XDialog.alert("Cập nhật người dùng thành công!");
             fillToTable();
-            loadUserListData();
-            JOptionPane.showMessageDialog(this, "Cập nhật user thành công!");
+            clear();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi cập nhật user: " + e.getMessage());
+            XDialog.alert("Lỗi khi cập nhật người dùng: " + e.getMessage());
         }
     }
 
     @Override
     public void delete() {
-        String username = txtUsername.getText();
-        if (username.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên đăng nhập!");
+        if (currentRow < 0) {
+            XDialog.alert("Vui lòng chọn người dùng để xóa!");
             return;
         }
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa user này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (XAuth.isAuthenticated() && userList.get(currentRow).getUsername().equals(XAuth.user.getUsername())) {
+            XDialog.alert("Không thể xóa tài khoản đang đăng nhập!");
+            return;
+        }
+        if (XDialog.confirm("Bạn có chắc muốn xóa người dùng này?")) {
             try {
-                userDAO.delete(username);
+                userDAO.deleteById(userList.get(currentRow).getUsername());
+                XDialog.alert("Xóa người dùng thành công!");
                 fillToTable();
-                loadUserListData();
                 clear();
-                JOptionPane.showMessageDialog(this, "Xóa user thành công!");
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Lỗi xóa user: " + e.getMessage());
+                XDialog.alert("Lỗi khi xóa người dùng: " + e.getMessage());
             }
         }
     }
 
     @Override
-    public void edit() {
-        int selectedRow = tblUsers.getSelectedRow();
-        if (selectedRow >= 0) {
-            currentRow = selectedRow;
-            User user = userList.get(currentRow);
-            setForm(user);
-            setEditable(true);
-        } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một user từ bảng!");
-        }
+    public void clear() {
+        txtUsername.setText("");
+        txtFullname.setText("");
+        txtPassword.setText("");
+        txtConfirmPassword.setText("");
+        chkAdmin.setSelected(false);
+        chkEmloyee.setSelected(true);
+        chkActivate.setSelected(true);
+        chkPause.setSelected(false);
+        setEditable(true);
+        txtUsername.setEditable(true);
+        currentRow = -1;
+        updateNavigationButtons();
     }
 
     @Override
     public void setEditable(boolean editable) {
-        txtUsername.setEnabled(editable);
-        txtPassword.setEnabled(editable);
-        txtConfirmPassword.setEnabled(editable);
-        txtFullname.setEnabled(editable);
-        chkManager.setEnabled(editable);
-        chkEmployee.setEnabled(editable);
-        chkActive.setEnabled(editable);
-        chkInactive.setEnabled(editable);
-        btnNew.setEnabled(editable);
-        btnUpdate.setEnabled(editable);
-        btnDelete.setEnabled(editable);
-        btnReset.setEnabled(editable);
+        txtUsername.setEditable(editable);
+        txtFullname.setEditable(editable);
+        txtPassword.setEditable(editable);
+        txtConfirmPassword.setEditable(editable);
+        chkAdmin.setEnabled(editable);
+        chkEmloyee.setEnabled(editable);
+        chkActivate.setEnabled(editable);
+        chkPause.setEnabled(editable);
+        btnCreate.setEnabled(editable);
+        btnUpdate.setEnabled(editable && currentRow >= 0);
+        btnDelete.setEnabled(editable && currentRow >= 0);
+    }
+
+    @Override
+    public void checkAll() {
+        for (int i = 0; i < tblUsers.getRowCount(); i++) {
+            tblUsers.setValueAt(true, i, 6);
+        }
+    }
+
+    @Override
+    public void uncheckAll() {
+        for (int i = 0; i < tblUsers.getRowCount(); i++) {
+            tblUsers.setValueAt(false, i, 6);
+        }
+    }
+
+    @Override
+    public void deleteCheckedItems() {
+        if (XDialog.confirm("Bạn có chắc muốn xóa các người dùng được chọn?")) {
+            try {
+                boolean hasDeletion = false;
+                for (int i = 0; i < tblUsers.getRowCount(); i++) {
+                    if ((Boolean) tblUsers.getValueAt(i, 6)) {
+                        if (XAuth.isAuthenticated() && userList.get(i).getUsername().equals(XAuth.user.getUsername())) {
+                            XDialog.alert("Không thể xóa tài khoản đang đăng nhập!");
+                            continue;
+                        }
+                        userDAO.deleteById(userList.get(i).getUsername());
+                        hasDeletion = true;
+                    }
+                }
+                if (hasDeletion) {
+                    XDialog.alert("Xóa các người dùng được chọn thành công!");
+                    fillToTable();
+                    clear();
+                }
+            } catch (Exception e) {
+                XDialog.alert("Lỗi khi xóa các người dùng: " + e.getMessage());
+            }
+        }
     }
 
     @Override
     public void moveFirst() {
-        if (userList != null && !userList.isEmpty()) {
+        if (!userList.isEmpty()) {
             currentRow = 0;
-            setForm(userList.get(currentRow));
+            moveTo(currentRow);
         }
     }
 
     @Override
     public void movePrevious() {
-        if (userList != null && currentRow > 0) {
+        if (currentRow > 0) {
             currentRow--;
-            setForm(userList.get(currentRow));
+            moveTo(currentRow);
         }
     }
 
     @Override
     public void moveNext() {
-        if (userList != null && currentRow < userList.size() - 1) {
+        if (currentRow < userList.size() - 1) {
             currentRow++;
-            setForm(userList.get(currentRow));
+            moveTo(currentRow);
         }
     }
 
     @Override
     public void moveLast() {
-        if (userList != null && !userList.isEmpty()) {
+        if (!userList.isEmpty()) {
             currentRow = userList.size() - 1;
-            setForm(userList.get(currentRow));
+            moveTo(currentRow);
         }
     }
 
     @Override
     public void moveTo(int rowIndex) {
-        if (userList != null && rowIndex >= 0 && rowIndex < userList.size()) {
+        if (rowIndex >= 0 && rowIndex < userList.size()) {
             currentRow = rowIndex;
-            setForm(userList.get(currentRow));
+            setForm(userList.get(rowIndex));
+            tblUsers.setRowSelectionInterval(rowIndex, rowIndex);
+            Tabs.setSelectedIndex(1);
+            setEditable(true);
+            txtUsername.setEditable(false);
+            updateNavigationButtons();
         }
     }
 
-    boolean validateUserForm() {
-        if (txtUsername.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tên đăng nhập không được để trống!");
-            return false;
-        }
-        if (txtPassword.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Mật khẩu không được để trống!");
-            return false;
-        }
-        if (!txtPassword.getText().equals(txtConfirmPassword.getText())) {
-            JOptionPane.showMessageDialog(this, "Mật khẩu xác nhận không khớp!");
-            return false;
-        }
-        if (txtFullname.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Họ và tên không được để trống!");
-            return false;
-        }
-        if (!chkManager.isSelected() && !chkEmployee.isSelected()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn vai trò!");
-            return false;
-        }
-        if (chkManager.isSelected() && chkEmployee.isSelected()) {
-            JOptionPane.showMessageDialog(this, "Chỉ được chọn một vai trò (Quản lý hoặc Nhân viên)!");
-            return false;
-        }
-        if (!chkActive.isSelected() && !chkInactive.isSelected()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn trạng thái!");
-            return false;
-        }
-        if (chkActive.isSelected() && chkInactive.isSelected()) {
-            JOptionPane.showMessageDialog(this, "Chỉ được chọn một trạng thái (Hoạt động hoặc Tạm dừng)!");
-            return false;
-        }
-        return true;
+    private void updateNavigationButtons() {
+        btnMoveFirst.setEnabled(currentRow > 0);
+        btnMovePrevious.setEnabled(currentRow > 0);
+        btnMoveNext.setEnabled(currentRow < userList.size() - 1);
+        btnMoveLast.setEnabled(currentRow < userList.size() - 1);
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
+    private void syncCheckboxes() {
+        chkAdmin.addActionListener(e -> {
+            if (chkAdmin.isSelected()) {
+                chkEmloyee.setSelected(false);
+            }
+        });
+        chkEmloyee.addActionListener(e -> {
+            if (chkEmloyee.isSelected()) {
+                chkAdmin.setSelected(false);
+            }
+        });
+        chkActivate.addActionListener(e -> {
+            if (chkActivate.isSelected()) {
+                chkPause.setSelected(false);
+            }
+        });
+        chkPause.addActionListener(e -> {
+            if (chkPause.isSelected()) {
+                chkActivate.setSelected(false);
+            }
+        });
+    }
+
+    private void init() {
+        // Thêm sự kiện nhấp chuột vào bảng để chỉnh sửa
+        tblUsers.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    edit();
+                }
+            }
+        });
+
+        // Đồng bộ checkbox
+        syncCheckboxes();
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        tabsUser = new javax.swing.JTabbedPane();
-        pnlList = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
+        Tabs = new javax.swing.JTabbedPane();
+        jPanel1 = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
         tblUsers = new javax.swing.JTable();
-        btnSelectAll = new javax.swing.JButton();
-        btnUnselectAll = new javax.swing.JButton();
-        btnClearSelection = new javax.swing.JButton();
-        pnlDetail = new javax.swing.JPanel();
-        pnlAvatar = new javax.swing.JPanel();
+        btnCheckAll = new javax.swing.JButton();
+        btnUncheckAll = new javax.swing.JButton();
+        btnDeleteCheckedItems = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JSeparator();
-        btnNew = new javax.swing.JButton();
-        btnUpdate = new javax.swing.JButton();
-        btnDelete = new javax.swing.JButton();
-        btnReset = new javax.swing.JButton();
-        btnLast = new javax.swing.JButton();
-        btnFirst = new javax.swing.JButton();
-        btnNext = new javax.swing.JButton();
-        btnPrevious = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        pnlPhoto = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         txtUsername = new javax.swing.JTextField();
         txtFullname = new javax.swing.JTextField();
-        txtPassword = new javax.swing.JTextField();
-        txtConfirmPassword = new javax.swing.JTextField();
+        txtPassword = new javax.swing.JPasswordField();
+        txtConfirmPassword = new javax.swing.JPasswordField();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
-        chkManager = new javax.swing.JCheckBox();
-        chkEmployee = new javax.swing.JCheckBox();
-        chkInactive = new javax.swing.JCheckBox();
-        chkActive = new javax.swing.JCheckBox();
+        chkAdmin = new javax.swing.JCheckBox();
+        chkActivate = new javax.swing.JCheckBox();
+        chkEmloyee = new javax.swing.JCheckBox();
+        chkPause = new javax.swing.JCheckBox();
+        jSeparator2 = new javax.swing.JSeparator();
+        btnCreate = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
+        btnDelete = new javax.swing.JButton();
+        btnClear = new javax.swing.JButton();
+        btnMoveLast = new javax.swing.JButton();
+        btnMoveFirst = new javax.swing.JButton();
+        btnMovePrevious = new javax.swing.JButton();
+        btnMoveNext = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Quản lý tài khoản");
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         tblUsers.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -374,72 +406,106 @@ public final class UserManagerJDialog extends javax.swing.JFrame implements Crud
                 return types [columnIndex];
             }
         });
-        jScrollPane1.setViewportView(tblUsers);
+        jScrollPane2.setViewportView(tblUsers);
 
-        btnSelectAll.setText("Chọn tất cả");
-        btnSelectAll.addActionListener(new java.awt.event.ActionListener() {
+        btnCheckAll.setText("Chọn tất cả");
+        btnCheckAll.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSelectAllActionPerformed(evt);
+                btnCheckAllActionPerformed(evt);
             }
         });
 
-        btnUnselectAll.setText("Bỏ chọn tất cả");
-        btnUnselectAll.addActionListener(new java.awt.event.ActionListener() {
+        btnUncheckAll.setText("Bỏ chọn tất cả");
+        btnUncheckAll.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUnselectAllActionPerformed(evt);
+                btnUncheckAllActionPerformed(evt);
             }
         });
 
-        btnClearSelection.setText("Xóa chọn tất cả");
-        btnClearSelection.addActionListener(new java.awt.event.ActionListener() {
+        btnDeleteCheckedItems.setText("Xóa các mục chọn");
+        btnDeleteCheckedItems.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnClearSelectionActionPerformed(evt);
+                btnDeleteCheckedItemsActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout pnlListLayout = new javax.swing.GroupLayout(pnlList);
-        pnlList.setLayout(pnlListLayout);
-        pnlListLayout.setHorizontalGroup(
-            pnlListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 700, Short.MAX_VALUE)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlListLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnSelectAll)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnUnselectAll)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnClearSelection)
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btnCheckAll)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnUncheckAll)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnDeleteCheckedItems))
+                    .addComponent(jSeparator1))
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 683, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
-        pnlListLayout.setVerticalGroup(
-            pnlListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlListLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 282, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(pnlListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnSelectAll)
-                    .addComponent(btnUnselectAll)
-                    .addComponent(btnClearSelection))
-                .addContainerGap())
-        );
-
-        tabsUser.addTab("DANH SÁCH", pnlList);
-
-        javax.swing.GroupLayout pnlAvatarLayout = new javax.swing.GroupLayout(pnlAvatar);
-        pnlAvatar.setLayout(pnlAvatarLayout);
-        pnlAvatarLayout.setHorizontalGroup(
-            pnlAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 162, Short.MAX_VALUE)
-        );
-        pnlAvatarLayout.setVerticalGroup(
-            pnlAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 209, Short.MAX_VALUE)
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 324, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(4, 4, 4)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnUncheckAll)
+                    .addComponent(btnDeleteCheckedItems)
+                    .addComponent(btnCheckAll))
+                .addGap(14, 14, 14))
         );
 
-        btnNew.setText("Tạo mới");
-        btnNew.addActionListener(new java.awt.event.ActionListener() {
+        Tabs.addTab("DANH SÁCH", jPanel1);
+
+        javax.swing.GroupLayout pnlPhotoLayout = new javax.swing.GroupLayout(pnlPhoto);
+        pnlPhoto.setLayout(pnlPhotoLayout);
+        pnlPhotoLayout.setHorizontalGroup(
+            pnlPhotoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 166, Short.MAX_VALUE)
+        );
+        pnlPhotoLayout.setVerticalGroup(
+            pnlPhotoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 239, Short.MAX_VALUE)
+        );
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
+        jLabel1.setText("Tên đăng nhập");
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
+        jLabel2.setText("Xác nhận mật khẩu");
+
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
+        jLabel3.setText("Họ và tên");
+
+        jLabel4.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
+        jLabel4.setText("Mật khẩu");
+
+        jLabel5.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
+        jLabel5.setText("Vai trò");
+
+        jLabel6.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
+        jLabel6.setText("Trạng thái");
+
+        chkAdmin.setText("Quản lý");
+
+        chkActivate.setText("Hoạt động");
+
+        chkEmloyee.setText("Nhân viên");
+
+        chkPause.setText("Tạm dừng");
+
+        btnCreate.setText("Tạo mới");
+        btnCreate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnNewActionPerformed(evt);
+                btnCreateActionPerformed(evt);
             }
         });
 
@@ -457,286 +523,218 @@ public final class UserManagerJDialog extends javax.swing.JFrame implements Crud
             }
         });
 
-        btnReset.setText("Nhập mới");
-        btnReset.addActionListener(new java.awt.event.ActionListener() {
+        btnClear.setText("Nhâp mới");
+        btnClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnResetActionPerformed(evt);
+                btnClearActionPerformed(evt);
             }
         });
 
-        btnLast.setText(">|");
-        btnLast.addActionListener(new java.awt.event.ActionListener() {
+        btnMoveLast.setText(">|");
+        btnMoveLast.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLastActionPerformed(evt);
+                btnMoveLastActionPerformed(evt);
             }
         });
 
-        btnFirst.setText("<<");
-        btnFirst.addActionListener(new java.awt.event.ActionListener() {
+        btnMoveFirst.setText("|<");
+        btnMoveFirst.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnFirstActionPerformed(evt);
+                btnMoveFirstActionPerformed(evt);
             }
         });
 
-        btnNext.setText(">>");
-        btnNext.addActionListener(new java.awt.event.ActionListener() {
+        btnMovePrevious.setText("<<");
+        btnMovePrevious.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnNextActionPerformed(evt);
+                btnMovePreviousActionPerformed(evt);
             }
         });
 
-        btnPrevious.setText("|<");
-        btnPrevious.addActionListener(new java.awt.event.ActionListener() {
+        btnMoveNext.setText(">>");
+        btnMoveNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnPreviousActionPerformed(evt);
+                btnMoveNextActionPerformed(evt);
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel1.setText("Tên đăng nhập");
-
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel2.setText("Xác nhận mật khẩu");
-
-        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel3.setText("Họ và tên");
-
-        jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel4.setText("Mật khẩu");
-
-        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel5.setText("Trạng thái");
-
-        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel6.setText("Vai trò");
-
-        chkManager.setText("Quản lý");
-        chkManager.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkManagerActionPerformed(evt);
-            }
-        });
-
-        chkEmployee.setText("Nhân viên");
-        chkEmployee.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkEmployeeActionPerformed(evt);
-            }
-        });
-
-        chkInactive.setText("Tạm dừng");
-        chkInactive.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkInactiveActionPerformed(evt);
-            }
-        });
-
-        chkActive.setText("Hoạt động");
-        chkActive.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkActiveActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout pnlDetailLayout = new javax.swing.GroupLayout(pnlDetail);
-        pnlDetail.setLayout(pnlDetailLayout);
-        pnlDetailLayout.setHorizontalGroup(
-            pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlDetailLayout.createSequentialGroup()
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator1)
-                    .addGroup(pnlDetailLayout.createSequentialGroup()
-                        .addComponent(pnlAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(pnlPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(pnlDetailLayout.createSequentialGroup()
-                                    .addComponent(chkManager)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                    .addComponent(chkEmployee))
-                                .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
-                        .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel5)
-                            .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(txtFullname)
-                                .addComponent(txtConfirmPassword)
-                                .addGroup(pnlDetailLayout.createSequentialGroup()
-                                    .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel3)
-                                        .addComponent(jLabel2))
-                                    .addGap(129, 129, 129)))
-                            .addGroup(pnlDetailLayout.createSequentialGroup()
-                                .addComponent(chkActive)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(chkInactive))))
-                    .addGroup(pnlDetailLayout.createSequentialGroup()
-                        .addComponent(btnNew)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnUpdate)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnDelete)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnReset)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnPrevious, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnFirst, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnNext, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnLast, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-            .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(pnlDetailLayout.createSequentialGroup()
-                    .addGap(184, 184, 184)
-                    .addComponent(jLabel6)
-                    .addContainerGap(470, Short.MAX_VALUE)))
-        );
-        pnlDetailLayout.setVerticalGroup(
-            pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlDetailLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(pnlDetailLayout.createSequentialGroup()
-                        .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(pnlDetailLayout.createSequentialGroup()
-                                .addGap(25, 25, 25)
-                                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel1)
-                                    .addComponent(jLabel3))
+                                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 238, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                        .addGap(6, 6, 6)
+                                        .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addGap(63, 63, 63)
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel2)
+                                            .addComponent(jLabel3)
+                                            .addComponent(jLabel6)
+                                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addGap(6, 6, 6)
+                                                .addComponent(chkActivate)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(chkPause)))
+                                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(txtFullname, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(txtConfirmPassword, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addContainerGap())))
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addGap(6, 6, 6)
+                                        .addComponent(chkAdmin)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(chkEmloyee))
+                                    .addComponent(jLabel4)
+                                    .addComponent(jLabel5))
+                                .addGap(0, 0, Short.MAX_VALUE))))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jSeparator2)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(btnCreate)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(txtFullname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(31, 31, 31)
-                                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabel2)
-                                    .addComponent(jLabel4))
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(pnlDetailLayout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(txtConfirmPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addGap(26, 26, 26)
-                        .addComponent(jLabel5))
-                    .addComponent(pnlAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(13, 13, 13)
-                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(chkActive)
-                        .addComponent(chkInactive))
-                    .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(chkManager)
-                        .addComponent(chkEmployee)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
-                .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnNew)
-                    .addComponent(btnUpdate)
+                                .addComponent(btnUpdate)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnDelete)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnClear)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnMoveFirst, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnMovePrevious, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnMoveNext, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnMoveLast, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap())))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel3))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtFullname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(47, 47, 47)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel2))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtConfirmPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel6))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(chkAdmin)
+                            .addComponent(chkEmloyee)
+                            .addComponent(chkActivate)
+                            .addComponent(chkPause)))
+                    .addComponent(pnlPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnClear)
                     .addComponent(btnDelete)
-                    .addComponent(btnReset)
-                    .addComponent(btnLast)
-                    .addComponent(btnFirst)
-                    .addComponent(btnNext)
-                    .addComponent(btnPrevious))
-                .addContainerGap())
-            .addGroup(pnlDetailLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlDetailLayout.createSequentialGroup()
-                    .addContainerGap(197, Short.MAX_VALUE)
-                    .addComponent(jLabel6)
-                    .addGap(104, 104, 104)))
+                    .addComponent(btnUpdate)
+                    .addComponent(btnCreate)
+                    .addComponent(btnMoveFirst)
+                    .addComponent(btnMovePrevious)
+                    .addComponent(btnMoveNext)
+                    .addComponent(btnMoveLast))
+                .addContainerGap(70, Short.MAX_VALUE))
         );
 
-        tabsUser.addTab("Biểu mẫu", pnlDetail);
+        Tabs.addTab("BIỂU MẪU", jPanel2);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabsUser)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(Tabs)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabsUser)
+            .addComponent(Tabs)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
-        moveNext();
-    }//GEN-LAST:event_btnNextActionPerformed
+    private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnClearActionPerformed
 
-    private void btnFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFirstActionPerformed
-        moveFirst();
-    }//GEN-LAST:event_btnFirstActionPerformed
+    private void btnUncheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUncheckAllActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnUncheckAllActionPerformed
 
-    private void btnSelectAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectAllActionPerformed
-        checkAll();
-    }//GEN-LAST:event_btnSelectAllActionPerformed
+    private void btnDeleteCheckedItemsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteCheckedItemsActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnDeleteCheckedItemsActionPerformed
 
-    private void btnClearSelectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearSelectionActionPerformed
-        deleteCheckedItems();
-    }//GEN-LAST:event_btnClearSelectionActionPerformed
-
-    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        delete();
-    }//GEN-LAST:event_btnDeleteActionPerformed
+    private void btnCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCreateActionPerformed
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
-        update();
+        // TODO add your handling code here:
     }//GEN-LAST:event_btnUpdateActionPerformed
 
-    private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
-        create();
-    }//GEN-LAST:event_btnNewActionPerformed
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnDeleteActionPerformed
 
-    private void btnUnselectAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnselectAllActionPerformed
-        uncheckAll();
-    }//GEN-LAST:event_btnUnselectAllActionPerformed
+    private void btnMoveFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveFirstActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnMoveFirstActionPerformed
 
-    private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
-        clear();
-    }//GEN-LAST:event_btnResetActionPerformed
+    private void btnMovePreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMovePreviousActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnMovePreviousActionPerformed
 
-    private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
-        movePrevious();
-    }//GEN-LAST:event_btnPreviousActionPerformed
+    private void btnMoveNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveNextActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnMoveNextActionPerformed
 
-    private void btnLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLastActionPerformed
-        moveLast();
-    }//GEN-LAST:event_btnLastActionPerformed
+    private void btnMoveLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveLastActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnMoveLastActionPerformed
 
-    private void chkActiveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkActiveActionPerformed
-        if (chkInactive.isSelected()) {
-            chkInactive.setSelected(false);
-        }
-    }//GEN-LAST:event_chkActiveActionPerformed
-
-    private void chkInactiveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkInactiveActionPerformed
-        if (chkActive.isSelected()) {
-            chkActive.setSelected(false);
-        }
-    }//GEN-LAST:event_chkInactiveActionPerformed
-
-    private void chkEmployeeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkEmployeeActionPerformed
-        if (chkEmployee.isSelected()) {
-            chkManager.setSelected(false);
-        }
-    }//GEN-LAST:event_chkEmployeeActionPerformed
-
-    private void chkManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkManagerActionPerformed
-        if (chkManager.isSelected()) {
-            chkEmployee.setSelected(false); // Bỏ chọn "Nhân viên" nếu "Quản lý" được chọn
-        }
-    }//GEN-LAST:event_chkManagerActionPerformed
+    private void btnCheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckAllActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCheckAllActionPerformed
 
     /**
      * @param args the command line arguments
@@ -764,60 +762,55 @@ public final class UserManagerJDialog extends javax.swing.JFrame implements Crud
             java.util.logging.Logger.getLogger(UserManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        //</editor-fold>
 
-        /* Create and display the form */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(UserManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-
+        /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
             public void run() {
-                new UserManagerJDialog().setVisible(true);
+                UserManagerJDialog dialog = new UserManagerJDialog(new javax.swing.JFrame(), true);
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        System.exit(0);
+                    }
+                });
+                dialog.setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnClearSelection;
+    private javax.swing.JTabbedPane Tabs;
+    private javax.swing.JButton btnCheckAll;
+    private javax.swing.JButton btnClear;
+    private javax.swing.JButton btnCreate;
     private javax.swing.JButton btnDelete;
-    private javax.swing.JButton btnFirst;
-    private javax.swing.JButton btnLast;
-    private javax.swing.JButton btnNew;
-    private javax.swing.JButton btnNext;
-    private javax.swing.JButton btnPrevious;
-    private javax.swing.JButton btnReset;
-    private javax.swing.JButton btnSelectAll;
-    private javax.swing.JButton btnUnselectAll;
+    private javax.swing.JButton btnDeleteCheckedItems;
+    private javax.swing.JButton btnMoveFirst;
+    private javax.swing.JButton btnMoveLast;
+    private javax.swing.JButton btnMoveNext;
+    private javax.swing.JButton btnMovePrevious;
+    private javax.swing.JButton btnUncheckAll;
     private javax.swing.JButton btnUpdate;
-    private javax.swing.JCheckBox chkActive;
-    private javax.swing.JCheckBox chkEmployee;
-    private javax.swing.JCheckBox chkInactive;
-    private javax.swing.JCheckBox chkManager;
+    private javax.swing.JCheckBox chkActivate;
+    private javax.swing.JCheckBox chkAdmin;
+    private javax.swing.JCheckBox chkEmloyee;
+    private javax.swing.JCheckBox chkPause;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JPanel pnlAvatar;
-    private javax.swing.JPanel pnlDetail;
-    private javax.swing.JPanel pnlList;
-    private javax.swing.JTabbedPane tabsUser;
+    private javax.swing.JSeparator jSeparator2;
+    private javax.swing.JPanel pnlPhoto;
     private javax.swing.JTable tblUsers;
-    private javax.swing.JTextField txtConfirmPassword;
+    private javax.swing.JPasswordField txtConfirmPassword;
     private javax.swing.JTextField txtFullname;
-    private javax.swing.JTextField txtPassword;
+    private javax.swing.JPasswordField txtPassword;
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 }
