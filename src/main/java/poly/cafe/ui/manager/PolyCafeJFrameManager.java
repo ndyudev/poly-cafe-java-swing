@@ -1,20 +1,23 @@
 package poly.cafe.ui.manager;
 
-import javax.swing.JFrame;
-import poly.cafe.ui.*;
-import poly.cafe.util.XDialog;
+import poly.cafe.ui.PolyCafeController;
+import poly.cafe.ui.ChangePasswordJDialog;
+import poly.cafe.util.DatabaseSQL;
 import poly.cafe.util.XJdbc;
 
 public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCafeController {
 
-    private JFrame parent;
-
-    public PolyCafeJFrameManager(JFrame parent) {
-        this.parent = parent;
-        init();
+    public PolyCafeJFrameManager() {
         initComponents();
-        setLocationRelativeTo(parent);
     }
+
+
+    public PolyCafeJFrameManager() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+
+    
 
     @Override
     public void dispose() {
@@ -241,52 +244,48 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHistoryActionPerformed
-//        new HistoryJDialog(this, true).setVisible(true);
+        
     }//GEN-LAST:event_btnHistoryActionPerformed
 
     private void btnSalesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalesActionPerformed
-//        new SalesJDialog(this, true).setVisible(true);
     }//GEN-LAST:event_btnSalesActionPerformed
 
     private void btnChangePasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChangePasswordActionPerformed
-//        new ChangePasswordJDialog(this, true).setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_btnChangePasswordActionPerformed
 
     private void btnExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExitActionPerformed
-        if (XDialog.confirm("Bạn muốn kết thúc?")) {
-            dispose(); // Đóng JFrame hiện tại
-            System.exit(0); // Thoát ứng dụng
-        }
+        this.dispose();
     }//GEN-LAST:event_btnExitActionPerformed
 
     private void btnUserManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserManagerActionPerformed
-        new UserManagerJDialog(this, true).setVisible(true);
     }//GEN-LAST:event_btnUserManagerActionPerformed
 
     private void btnBillManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBillManagerActionPerformed
-        new BillManagerJDialog(this, true).setVisible(true);
     }//GEN-LAST:event_btnBillManagerActionPerformed
 
     private void btnCategoryManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCategoryManagerActionPerformed
-        new CategoryManagerJDialog(this, true).setVisible(true);
     }//GEN-LAST:event_btnCategoryManagerActionPerformed
 
     private void btnCardManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCardManagerActionPerformed
-        new CardManagerJDialog(this, true).setVisible(true);
+
     }//GEN-LAST:event_btnCardManagerActionPerformed
 
     private void btnRevenueManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRevenueManagerActionPerformed
-        new RevenueManagerJDialog(this, true).setVisible(true);
     }//GEN-LAST:event_btnRevenueManagerActionPerformed
 
     private void btnDrinkManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDrinkManagerActionPerformed
-        new DrinkManagerJDialog(this, true).setVisible(true);
     }//GEN-LAST:event_btnDrinkManagerActionPerformed
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -294,16 +293,29 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
                     break;
                 }
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(PolyCafeJFrameManager.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(PolyCafeJFrameManager.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(PolyCafeJFrameManager.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(PolyCafeJFrameManager.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
-        java.awt.EventQueue.invokeLater(() -> {
-            JFrame hiddenFrame = new JFrame();
-            hiddenFrame.setUndecorated(true);
-            hiddenFrame.setSize(0, 0);
-            hiddenFrame.setVisible(true);
-            new PolyCafeJFrameManager(hiddenFrame).setVisible(true);
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new PolyCafeJFrameManager().setVisible(true);
+            }
         });
     }
 
@@ -332,6 +344,12 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
         this.setSize(800, 600);
         this.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
         // Thêm logic kết nối nếu cần
-        XJdbc.openConnection();
+         XJdbc.openConnection();
+    }
+
+    @Override
+    public void showDialog(ChangePasswordJDialog changePasswordJDialog) {
+        changePasswordJDialog.setLocationRelativeTo(null);
+        changePasswordJDialog.setVisible(true);
     }
 }
