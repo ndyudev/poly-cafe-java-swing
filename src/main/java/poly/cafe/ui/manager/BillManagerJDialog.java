@@ -1,23 +1,14 @@
 package poly.cafe.ui.manager;
 
-import poly.cafe.ui.manager.*;
-import javax.swing.JFrame;
 
-/**
- *
- * @author Chauu Nhat Duyy
- */
-public class BillManagerJDialog extends javax.swing.JFrame {
+public class BillManagerJDialog extends javax.swing.JDialog {
 
-    /**
-     * Creates new form BillManagerJDialog
-     */
-    public BillManagerJDialog() {
+    public BillManagerJDialog(java.awt.Frame parent, boolean modal) {
+        super(parent, modal);
         initComponents();
-        this.init();
     }
 
-    public BillManagerJDialog(JFrame frame, boolean b) {
+    public BillManagerJDialog() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
@@ -30,7 +21,7 @@ public class BillManagerJDialog extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -72,18 +63,20 @@ public class BillManagerJDialog extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(BillManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        //</editor-fold>
 
-        /* Create and display the form */
+        /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new BillManagerJDialog().setVisible(true);
+                BillManagerJDialog dialog = new BillManagerJDialog(new javax.swing.JFrame(), true);
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        System.exit(0);
+                    }
+                });
+                dialog.setVisible(true);
             }
         });
-    }
-
-    private void init() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

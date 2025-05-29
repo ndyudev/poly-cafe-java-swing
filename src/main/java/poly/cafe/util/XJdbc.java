@@ -4,10 +4,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class XJdbc {
+ public class XJdbc {
 
     private static Connection connection;
-
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=PS44284_ChauNhatDuy_PolyCafe_ASM;encrypt=true;trustServerCertificate=true;";
     private static final String USERNAME = "sa";
     private static final String PASSWORD = "ndyudev227";

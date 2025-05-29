@@ -1,4 +1,4 @@
-package poly.cafe.ui.manager;
+package poly.cafe.ui;
 
 import poly.cafe.ui.PolyCafeController;
 import poly.cafe.util.XAuth;
@@ -6,6 +6,12 @@ import poly.cafe.util.XJdbc;
 import poly.cafe.util.XDialog;
 import javax.swing.ImageIcon;
 import java.awt.Image;
+import poly.cafe.ui.manager.BillManagerJDialog;
+import poly.cafe.ui.manager.CardManagerJDialog;
+import poly.cafe.ui.manager.CategoryManagerJDialog;
+import poly.cafe.ui.manager.DrinkManagerJDialog;
+import poly.cafe.ui.manager.RevenueManagerJDialog;
+import poly.cafe.ui.manager.UserManagerJDialog;
 
 public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCafeController {
 
@@ -116,10 +122,10 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
             PanelButtonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PanelButtonLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(PanelButtonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnChangePassword)
-                    .addComponent(btnSales, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addGroup(PanelButtonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnChangePassword, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
+                    .addComponent(btnSales, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(PanelButtonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnExit, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
                     .addComponent(btnHistory, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -241,17 +247,17 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblFullname, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(94, 94, 94))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(panelAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(PanelButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblFullname, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(64, 64, 64)))
                 .addComponent(PanelIMG, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -275,11 +281,11 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHistoryActionPerformed
-
+        new HistoryJDialog().setVisible(true);
     }//GEN-LAST:event_btnHistoryActionPerformed
 
     private void btnSalesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalesActionPerformed
-
+        new SalesJDialog().setVisible(true);
     }//GEN-LAST:event_btnSalesActionPerformed
 
     private void btnChangePasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChangePasswordActionPerformed
@@ -287,33 +293,59 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
     }//GEN-LAST:event_btnChangePasswordActionPerformed
 
     private void btnExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExitActionPerformed
-        if (XDialog.confirm("Bạn muốn thoát chương trình?")) {
+        if (XDialog.confirm("Bạn có muốn thoát chương trình?")) {
             dispose();
         }
     }//GEN-LAST:event_btnExitActionPerformed
 
     private void btnUserManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUserManagerActionPerformed
-        showUserManagerJDialog(this);
+        if (XAuth.user != null && XAuth.user.isManager()) {
+            UserManagerJDialog dialog = new UserManagerJDialog(this, true);
+            dialog.setVisible(true);
+        } else {
+            XDialog.alert("Bạn không có quyền truy cập chức năng này!");
+        }
     }//GEN-LAST:event_btnUserManagerActionPerformed
 
     private void btnBillManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBillManagerActionPerformed
-
+        if (XAuth.user != null && XAuth.user.isManager()) {
+            new BillManagerJDialog().setVisible(true);
+        } else {
+            XDialog.alert("Bạn không có quyền truy cập chức năng này!");
+        }
     }//GEN-LAST:event_btnBillManagerActionPerformed
 
     private void btnCategoryManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCategoryManagerActionPerformed
-        showCategoryManagerJDialog(this);
+        if (XAuth.user != null && XAuth.user.isManager()) {
+            CategoryManagerJDialog dialog = new CategoryManagerJDialog(this, true);
+            dialog.setVisible(true);
+        } else {
+            XDialog.alert("Bạn không có quyền truy cập chức năng này!");
+        }
     }//GEN-LAST:event_btnCategoryManagerActionPerformed
 
     private void btnCardManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCardManagerActionPerformed
-        showCardManagerJDialog(this);
+        if (XAuth.user != null && XAuth.user.isManager()) {
+            new CardManagerJDialog().setVisible(true);
+        } else {
+            XDialog.alert("Bạn không có quyền truy cập chức năng này!");
+        }
     }//GEN-LAST:event_btnCardManagerActionPerformed
 
     private void btnRevenueManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRevenueManagerActionPerformed
-
+        if (XAuth.user != null && XAuth.user.isManager()) {
+            new RevenueManagerJDialog().setVisible(true);
+        } else {
+            XDialog.alert("Bạn không có quyền truy cập chức năng này!");
+        }
     }//GEN-LAST:event_btnRevenueManagerActionPerformed
 
     private void btnDrinkManagerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDrinkManagerActionPerformed
-
+        if (XAuth.user != null && XAuth.user.isManager()) {
+            new DrinkManagerJDialog().setVisible(true);
+        } else {
+            XDialog.alert("Bạn không có quyền truy cập chức năng này!");
+        }
     }//GEN-LAST:event_btnDrinkManagerActionPerformed
 
     /**
@@ -341,6 +373,14 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(PolyCafeJFrameManager.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
         //</editor-fold>
         //</editor-fold>
@@ -380,8 +420,8 @@ public class PolyCafeJFrameManager extends javax.swing.JFrame implements PolyCaf
     @Override
     public void init() {
         this.setTitle("Poly Cafe Manager");
-        this.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-        // Thêm logic kết nối nếu cần
         XJdbc.openConnection();
+        this.pack(); // Let the layout define its natural size
+        this.setLocationRelativeTo(null); // Center the window
     }
 }

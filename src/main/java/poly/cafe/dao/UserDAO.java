@@ -1,19 +1,8 @@
 package poly.cafe.dao;
 
-import poly.cafe.entity.User;
 import java.util.List;
+import poly.cafe.entity.User;
 
-public interface UserDAO {
-
-    void insert(User user);
-
-    void update(User user);
-
-    void delete(String username);
-
-    List<User> findAll();
-
-    User findById(String username);
-
+public interface UserDAO extends CrudDAO<User, String> {
     List<User> findByName(String keyword);
 }

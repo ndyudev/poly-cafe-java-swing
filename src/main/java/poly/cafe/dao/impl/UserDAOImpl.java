@@ -1,102 +1,64 @@
 package poly.cafe.dao.impl;
 
+import java.util.List;
+import poly.cafe.dao.UserDAO;
 import poly.cafe.entity.User;
 import poly.cafe.util.XJdbc;
 import poly.cafe.util.XQuery;
-import java.util.List;
-import poly.cafe.dao.UserDAO;
 
 public class UserDAOImpl implements UserDAO {
 
-    String insertSql = "INSERT INTO Users(Username, Password, Fullname, Photo, Manager, Enabled) VALUES(?, ?, ?, ?, ?, ?)";
-    String updateSql = "UPDATE Users SET Password=?, Fullname=?, Photo=?, Manager=?, Enabled=? WHERE Username=?";
+    String createSql = "INSERT INTO Users(Username, Password, Enabled, Fullname, Photo, Manager) VALUES(?, ?, ?, ?, ?, ?)";
+    String updateSql = "UPDATE Users SET Password=?, Enabled=?, Fullname=?, Photo=?, Manager=? WHERE Username=?";
     String deleteSql = "DELETE FROM Users WHERE Username=?";
-    String selectAllSql = "SELECT * FROM Users";
-    String selectByIdSql = "SELECT * FROM Users WHERE Username=?";
-    String selectByNameSql = "SELECT * FROM Users WHERE Fullname LIKE ?";
+    String findAllSql = "SELECT * FROM Users";
+    String findByIdSql = "SELECT * FROM Users WHERE Username=?";
+    String findByNameSql = "SELECT * FROM Users WHERE Fullname LIKE ?";
 
     @Override
-    public void insert(User user) {
-        if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("User hoặc Username không được null hoặc rỗng");
-        }
+    public User create(User entity) {
         Object[] values = {
-            user.getUsername(),
-            user.getPassword(),
-            user.getFullname(),
-            user.getPhoto(),
-            user.isManager(),
-            user.isEnabled()
+            entity.getUsername(),
+            entity.getPassword(),
+            entity.isEnabled(),
+            entity.getFullname(),
+            entity.getPhoto(),
+            entity.isManager()
         };
-        try {
-            XJdbc.executeUpdate(insertSql, values);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi thêm user: " + e.getMessage(), e);
-        }
+        XJdbc.executeUpdate(createSql, values);
+        return entity;
     }
 
     @Override
-    public void update(User user) {
-        if (user == null || user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("User hoặc Username không được null hoặc rỗng");
-        }
+    public void update(User entity) {
         Object[] values = {
-            user.getPassword(),
-            user.getFullname(),
-            user.getPhoto(),
-            user.isManager(),
-            user.isEnabled(),
-            user.getUsername()
+            entity.getPassword(),
+            entity.isEnabled(),
+            entity.getFullname(),
+            entity.getPhoto(),
+            entity.isManager(),
+            entity.getUsername()
         };
-        try {
-            XJdbc.executeUpdate(updateSql, values);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi cập nhật user: " + e.getMessage(), e);
-        }
+        XJdbc.executeUpdate(updateSql, values);
     }
 
     @Override
-    public void delete(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username không được null hoặc rỗng");
-        }
-        try {
-            XJdbc.executeUpdate(deleteSql, username);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi xóa user: " + e.getMessage(), e);
-        }
+    public void deleteById(String id) {
+        XJdbc.executeUpdate(deleteSql, id);
     }
 
     @Override
     public List<User> findAll() {
-        try {
-            return XQuery.getBeanList(User.class, selectAllSql);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi truy vấn tất cả users: " + e.getMessage(), e);
-        }
+        return XQuery.getBeanList(User.class, findAllSql);
     }
 
     @Override
-    public User findById(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username không được null hoặc rỗng");
-        }
-        try {
-            return XQuery.getSingleBean(User.class, selectByIdSql, username);
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi truy vấn user theo username: " + e.getMessage(), e);
-        }
+    public User findById(String id) {
+        return XQuery.getSingleBean(User.class, findByIdSql, id);
     }
 
     @Override
     public List<User> findByName(String keyword) {
-        if (keyword == null) {
-            keyword = "";
-        }
-        try {
-            return XQuery.getBeanList(User.class, selectByNameSql, "%" + keyword + "%");
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi khi truy vấn users theo tên: " + e.getMessage(), e);
-        }
+        return XQuery.getBeanList(User.class, findByNameSql, "%" + keyword + "%");
     }
 }
