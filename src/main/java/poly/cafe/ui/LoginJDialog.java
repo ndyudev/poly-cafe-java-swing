@@ -3,7 +3,7 @@ package poly.cafe.ui;
 import poly.cafe.dao.UserDAO;
 import poly.cafe.dao.impl.UserDAOImpl;
 import poly.cafe.entity.User;
-import poly.cafe.ui.manager.PolyCafeJFrameManager;
+import poly.cafe.ui.PolyCafeJFrame;
 import poly.cafe.util.XAuth;
 import poly.cafe.util.XDialog;
 
@@ -52,11 +52,11 @@ public class LoginJDialog extends javax.swing.JDialog implements LoginController
 
         // Kiểm tra vai trò người dùng
         if (user.isManager()) {
-            // Quản lý mở PolyCafeJFrameManager
-            new PolyCafeJFrameManager().setVisible(true);
+            // Quản lý mở PolyCafeJFrame
+            new PolyCafeJFrame().setVisible(true);
         } else {
             // Nhân viên mở giao diện khác (hoặc thông báo)
-//            XDialog.alert("Chào nhân viên! Giao diện nhân viên đang phát triển.");
+            XDialog.alert("Ngày mới làm việc tốt đẹp nhé. Xin cảm ơn bạn!");
             // Nếu có giao diện nhân viên, ví dụ:
             new PolyCafeJFrame().setVisible(true);
         }

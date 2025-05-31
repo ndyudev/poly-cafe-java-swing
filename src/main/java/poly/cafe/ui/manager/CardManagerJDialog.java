@@ -1,26 +1,28 @@
 package poly.cafe.ui.manager;
 
-import java.util.List;
-import javax.swing.table.DefaultTableModel;
 import poly.cafe.dao.CardDAO;
 import poly.cafe.dao.impl.CardDAOImpl;
 import poly.cafe.entity.Card;
 import poly.cafe.util.XDialog;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+
 public class CardManagerJDialog extends javax.swing.JDialog implements CardController {
 
     private CardDAO cardDAO;
     private List<Card> cardList;
-    private int currentIndex = -1; // Chỉ số bản ghi hiện tại
+    private int currentIndex = -1;
 
     public CardManagerJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         cardDAO = new CardDAOImpl();
         initComponents();
-    }
-
-    public CardManagerJDialog() {
-        
+        init();
+        open();
     }
 
     @Override
@@ -32,8 +34,10 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         if (!cardList.isEmpty()) {
             currentIndex = 0;
             setForm(cardList.get(currentIndex));
+            tblCards.setRowSelectionInterval(currentIndex, currentIndex);
         }
-        setEditable(true); // Mặc định form có thể chỉnh sửa
+        setEditable(false);
+        updateNavigationButtons();
     }
 
     @Override
@@ -42,12 +46,13 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
             return;
         }
         txtIdCard.setText(card.getId() != null ? card.getId().toString() : "");
-        // Ánh xạ Status (0 = Operating, 1 = Error, 2 = Lose)
         int status = card.getStatus();
         chkOperating.setSelected(status == 0);
         chkError.setSelected(status == 1);
         chkLose.setSelected(status == 2);
-        tblCards.setRowSelectionInterval(currentIndex, currentIndex);
+        if (currentIndex >= 0 && currentIndex < cardList.size()) {
+            tblCards.setRowSelectionInterval(currentIndex, currentIndex);
+        }
     }
 
     @Override
@@ -78,7 +83,7 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
     @Override
     public void fillToTable() {
         DefaultTableModel model = (DefaultTableModel) tblCards.getModel();
-        model.setRowCount(0); // Xóa dữ liệu cũ
+        model.setRowCount(0);
         for (Card card : cardList) {
             model.addRow(new Object[]{card.getId(), getStatusString(card.getStatus()), false});
         }
@@ -90,6 +95,10 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         if (selectedRow >= 0) {
             currentIndex = selectedRow;
             setForm(cardList.get(currentIndex));
+            setEditable(true);
+            txtIdCard.setEditable(false);
+            jTabbedPane1.setSelectedIndex(1);
+            updateNavigationButtons();
         }
     }
 
@@ -106,11 +115,15 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
             return;
         }
 
-        cardDAO.create(card);
-        cardList = cardDAO.findAll();
-        fillToTable();
-        clear();
-        XDialog.alert("Tạo thẻ thành công!");
+        try {
+            cardDAO.create(card);
+            cardList = cardDAO.findAll();
+            fillToTable();
+            clear();
+            XDialog.alert("Tạo thẻ thành công!");
+        } catch (Exception e) {
+            XDialog.alert("Lỗi khi tạo thẻ: " + e.getMessage());
+        }
     }
 
     @Override
@@ -122,15 +135,19 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
 
         Card existingCard = cardDAO.findById(card.getId());
         if (existingCard == null) {
-            XDialog.alert( "Mã thẻ không tồn tại!");
+            XDialog.alert("Mã thẻ không tồn tại!");
             return;
         }
 
-        cardDAO.update(card);
-        cardList = cardDAO.findAll();
-        fillToTable();
-        setForm(cardList.get(currentIndex));
-        XDialog.alert("Cập nhật thẻ thành công!");
+        try {
+            cardDAO.update(card);
+            cardList = cardDAO.findAll();
+            fillToTable();
+            setForm(cardList.get(currentIndex));
+            XDialog.alert("Cập nhật thẻ thành công!");
+        } catch (Exception e) {
+            XDialog.alert("Lỗi khi cập nhật thẻ: " + e.getMessage());
+        }
     }
 
     @Override
@@ -155,12 +172,17 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         }
 
         if (XDialog.confirm("Bạn có chắc muốn xóa thẻ này?")) {
-            cardDAO.deleteById(id);
-            cardList = cardDAO.findAll();
-            fillToTable();
-            clear();
-            currentIndex = -1;
-            XDialog.alert("Xóa thẻ thành công!");
+            try {
+                cardDAO.deleteById(id);
+                cardList = cardDAO.findAll();
+                fillToTable();
+                clear();
+                currentIndex = -1;
+                updateNavigationButtons();
+                XDialog.alert("Xóa thẻ thành công!");
+            } catch (Exception e) {
+                XDialog.alert("Lỗi khi xóa thẻ: " + e.getMessage());
+            }
         }
     }
 
@@ -170,7 +192,10 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         chkOperating.setSelected(false);
         chkError.setSelected(false);
         chkLose.setSelected(false);
+        setEditable(true);
+        txtIdCard.setEditable(true);
         currentIndex = -1;
+        updateNavigationButtons();
     }
 
     @Override
@@ -180,98 +205,104 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         chkError.setEnabled(editable);
         chkLose.setEnabled(editable);
         btnCreate.setEnabled(editable);
-        btnUpdate.setEnabled(editable);
-        btnDelete.setEnabled(editable);
+        btnUpdate.setEnabled(editable && currentIndex >= 0);
+        btnDelete.setEnabled(editable && currentIndex >= 0);
     }
 
     @Override
     public void checkAll() {
-        DefaultTableModel model = (DefaultTableModel) tblCards.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt(true, i, 2); // Cột "Select"
+        for (int i = 0; i < tblCards.getRowCount(); i++) {
+            tblCards.setValueAt(true, i, 2);
         }
     }
 
     @Override
     public void uncheckAll() {
-        DefaultTableModel model = (DefaultTableModel) tblCards.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt(false, i, 2); // Cột "Select"
+        for (int i = 0; i < tblCards.getRowCount(); i++) {
+            tblCards.setValueAt(false, i, 2);
         }
     }
 
     @Override
     public void deleteCheckedItems() {
-        DefaultTableModel model = (DefaultTableModel) tblCards.getModel();
-        for (int i = model.getRowCount() - 1; i >= 0; i--) {
-            Boolean selected = (Boolean) model.getValueAt(i, 2);
-            if (selected != null && selected) {
-                Integer id = (Integer) model.getValueAt(i, 0);
-                cardDAO.deleteById(id);
+        if (XDialog.confirm("Bạn có chắc muốn xóa các thẻ được chọn?")) {
+            try {
+                boolean hasDeletion = false;
+                for (int i = tblCards.getRowCount() - 1; i >= 0; i--) {
+                    if ((Boolean) tblCards.getValueAt(i, 2)) {
+                        Integer id = (Integer) tblCards.getValueAt(i, 0);
+                        cardDAO.deleteById(id);
+                        hasDeletion = true;
+                    }
+                }
+                if (hasDeletion) {
+                    cardList = cardDAO.findAll();
+                    fillToTable();
+                    clear();
+                    XDialog.alert("Xóa các thẻ được chọn thành công!");
+                }
+            } catch (Exception e) {
+                XDialog.alert("Lỗi khi xóa các thẻ: " + e.getMessage());
             }
         }
-        cardList = cardDAO.findAll();
-        fillToTable();
-        clear();
-        XDialog.alert("Xóa các mục đã chọn thành công!");
     }
 
     @Override
     public void moveFirst() {
-        if (cardList.isEmpty()) {
-            return;
+        if (!cardList.isEmpty()) {
+            currentIndex = 0;
+            moveTo(currentIndex);
         }
-        currentIndex = 0;
-        setForm(cardList.get(currentIndex));
     }
 
     @Override
     public void movePrevious() {
-        if (cardList.isEmpty() || currentIndex <= 0) {
-            return;
+        if (currentIndex > 0) {
+            currentIndex--;
+            moveTo(currentIndex);
         }
-        currentIndex--;
-        setForm(cardList.get(currentIndex));
     }
 
     @Override
     public void moveNext() {
-        if (cardList.isEmpty() || currentIndex >= cardList.size() - 1) {
-            return;
+        if (currentIndex < cardList.size() - 1) {
+            currentIndex++;
+            moveTo(currentIndex);
         }
-        currentIndex++;
-        setForm(cardList.get(currentIndex));
     }
 
     @Override
     public void moveLast() {
-        if (cardList.isEmpty()) {
-            return;
+        if (!cardList.isEmpty()) {
+            currentIndex = cardList.size() - 1;
+            moveTo(currentIndex);
         }
-        currentIndex = cardList.size() - 1;
-        setForm(cardList.get(currentIndex));
     }
 
     @Override
     public void moveTo(int rowIndex) {
-        if (cardList.isEmpty() || rowIndex < 0 || rowIndex >= cardList.size()) {
-            return;
+        if (rowIndex >= 0 && rowIndex < cardList.size()) {
+            currentIndex = rowIndex;
+            setForm(cardList.get(currentIndex));
+            tblCards.setRowSelectionInterval(currentIndex, currentIndex);
+            jTabbedPane1.setSelectedIndex(1);
+            setEditable(true);
+            txtIdCard.setEditable(false);
+            updateNavigationButtons();
         }
-        currentIndex = rowIndex;
-        setForm(cardList.get(currentIndex));
     }
 
     private int getSelectedStatus() {
         if (chkOperating.isSelected()) {
-            return 0; // Operating
+            return 0;
         }
         if (chkError.isSelected()) {
-            return 1;     // Error
+            return 1;
         }
         if (chkLose.isSelected()) {
-            return 2;      // Lose
+            return 2;
         }
-        return -1; // Không chọn
+        return -1;
     }
 
     private String getStatusString(int status) {
@@ -287,7 +318,7 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         }
     }
 
-    private void ensureSingleCheckboxSelection(javax.swing.JCheckBox selectedCheckBox) {
+    private void ensureSingleCheckboxSelection(JCheckBox selectedCheckBox) {
         if (selectedCheckBox == chkOperating) {
             chkError.setSelected(false);
             chkLose.setSelected(false);
@@ -298,6 +329,30 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
             chkOperating.setSelected(false);
             chkError.setSelected(false);
         }
+    }
+
+    private void updateNavigationButtons() {
+        btnMoveFirst.setEnabled(currentIndex > 0);
+        btnMovePrevious.setEnabled(currentIndex > 0);
+        btnMoveNext.setEnabled(currentIndex < cardList.size() - 1);
+        btnMoveLast.setEnabled(currentIndex < cardList.size() - 1);
+    }
+
+    private void init() {
+        // Thêm sự kiện nhấp đúp vào bảng để chỉnh sửa
+        tblCards.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    edit();
+                }
+            }
+        });
+
+        // Đồng bộ checkbox trạng thái
+        chkOperating.addActionListener(e -> ensureSingleCheckboxSelection(chkOperating));
+        chkError.addActionListener(e -> ensureSingleCheckboxSelection(chkError));
+        chkLose.addActionListener(e -> ensureSingleCheckboxSelection(chkLose));
     }
 
     @SuppressWarnings("unchecked")
@@ -578,23 +633,23 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnMoveNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveNextActionPerformed
-        // TODO add your handling code here:
+        moveNext();
     }//GEN-LAST:event_btnMoveNextActionPerformed
 
     private void btnCheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckAllActionPerformed
-        // TODO add your handling code here:
+        checkAll();
     }//GEN-LAST:event_btnCheckAllActionPerformed
 
     private void btnUncheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUncheckAllActionPerformed
-        // TODO add your handling code here:
+        uncheckAll();
     }//GEN-LAST:event_btnUncheckAllActionPerformed
 
     private void btnDeleteCheckedItemsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteCheckedItemsActionPerformed
-        // TODO add your handling code here:
+        deleteCheckedItems();
     }//GEN-LAST:event_btnDeleteCheckedItemsActionPerformed
 
     private void chkOperatingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkOperatingActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_chkOperatingActionPerformed
 
     private void chkErrorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkErrorActionPerformed
@@ -602,35 +657,35 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
     }//GEN-LAST:event_chkErrorActionPerformed
 
     private void chkLoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkLoseActionPerformed
-        // TODO add your handling code here:
+        
     }//GEN-LAST:event_chkLoseActionPerformed
 
     private void btnCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateActionPerformed
-        // TODO add your handling code here:
+        create();
     }//GEN-LAST:event_btnCreateActionPerformed
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
-        // TODO add your handling code here:
+        update();
     }//GEN-LAST:event_btnUpdateActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        // TODO add your handling code here:
+        delete();
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
-        // TODO add your handling code here:
+        clear();
     }//GEN-LAST:event_btnClearActionPerformed
 
     private void btnMoveFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveFirstActionPerformed
-        // TODO add your handling code here:
+        moveFirst();
     }//GEN-LAST:event_btnMoveFirstActionPerformed
 
     private void btnMovePreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMovePreviousActionPerformed
-        // TODO add your handling code here:
+        movePrevious();
     }//GEN-LAST:event_btnMovePreviousActionPerformed
 
     private void btnMoveLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveLastActionPerformed
-        // TODO add your handling code here:
+        moveLast();
     }//GEN-LAST:event_btnMoveLastActionPerformed
 
     /**
