@@ -15,7 +15,6 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
     private UserDAO userDAO;
     private List<User> userList;
     private int currentRow = -1;
-    private final String DEFAULT_PHOTO = "photo.png";
 
     public UserManagerJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -64,8 +63,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 .Fullname(fullname)
                 .Manager(manager)
                 .Enabled(enabled)
-                .Photo("")
-                .build();
+                .build(); // Loại bỏ Photo hoàn toàn
     }
 
     private boolean validateForm() {
@@ -103,7 +101,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 user.getUsername(),
                 user.getPassword(),
                 user.getFullname(),
-                user.getPhoto(),
+                "", // Loại bỏ cột ảnh, thay bằng chuỗi rỗng
                 user.isManager() ? "Quản lý" : "Nhân viên",
                 user.isEnabled() ? "Hoạt động" : "Tạm dừng",
                 false
@@ -143,6 +141,8 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
             fillToTable();
             clear();
         } catch (Exception e) {
+            System.out.println("Lỗi tạo user: " + e.getMessage()); // Log lỗi để debug
+            e.printStackTrace(); // In stack trace chi tiết
             XDialog.alert("Lỗi khi tạo người dùng: " + e.getMessage());
         }
     }
@@ -333,7 +333,6 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
     }
 
     private void init() {
-        // Thêm sự kiện nhấp chuột vào bảng để chỉnh sửa
         tblUsers.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -343,7 +342,6 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
             }
         });
 
-        // Đồng bộ checkbox
         syncCheckboxes();
     }
 
@@ -360,7 +358,6 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
         btnDeleteCheckedItems = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JSeparator();
         jPanel2 = new javax.swing.JPanel();
-        pnlPhoto = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
@@ -384,6 +381,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
         btnMoveFirst = new javax.swing.JButton();
         btnMovePrevious = new javax.swing.JButton();
         btnMoveNext = new javax.swing.JButton();
+        panelAvatar = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -465,17 +463,6 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
 
         Tabs.addTab("DANH SÁCH", jPanel1);
 
-        javax.swing.GroupLayout pnlPhotoLayout = new javax.swing.GroupLayout(pnlPhoto);
-        pnlPhoto.setLayout(pnlPhotoLayout);
-        pnlPhotoLayout.setHorizontalGroup(
-            pnlPhotoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 166, Short.MAX_VALUE)
-        );
-        pnlPhotoLayout.setVerticalGroup(
-            pnlPhotoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 239, Short.MAX_VALUE)
-        );
-
         jLabel1.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
         jLabel1.setText("Tên đăng nhập");
 
@@ -495,12 +482,32 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
         jLabel6.setText("Trạng thái");
 
         chkAdmin.setText("Quản lý");
+        chkAdmin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkAdminActionPerformed(evt);
+            }
+        });
 
         chkActivate.setText("Hoạt động");
+        chkActivate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkActivateActionPerformed(evt);
+            }
+        });
 
         chkEmloyee.setText("Nhân viên");
+        chkEmloyee.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkEmloyeeActionPerformed(evt);
+            }
+        });
 
         chkPause.setText("Tạm dừng");
+        chkPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkPauseActionPerformed(evt);
+            }
+        });
 
         btnCreate.setText("Tạo mới");
         btnCreate.addActionListener(new java.awt.event.ActionListener() {
@@ -558,6 +565,17 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
             }
         });
 
+        javax.swing.GroupLayout panelAvatarLayout = new javax.swing.GroupLayout(panelAvatar);
+        panelAvatar.setLayout(panelAvatarLayout);
+        panelAvatarLayout.setHorizontalGroup(
+            panelAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 154, Short.MAX_VALUE)
+        );
+        panelAvatarLayout.setVerticalGroup(
+            panelAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -566,8 +584,8 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(pnlPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(panelAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -588,7 +606,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                                                 .addComponent(chkActivate)
                                                 .addGap(18, 18, 18)
                                                 .addComponent(chkPause)))
-                                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addContainerGap(18, Short.MAX_VALUE))
                                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -650,15 +668,15 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                         .addGap(18, 18, 18)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel5)
-                            .addComponent(jLabel6))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(chkAdmin)
-                            .addComponent(chkEmloyee)
-                            .addComponent(chkActivate)
-                            .addComponent(chkPause)))
-                    .addComponent(pnlPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                            .addComponent(jLabel6)))
+                    .addComponent(panelAvatar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(chkAdmin)
+                    .addComponent(chkEmloyee)
+                    .addComponent(chkActivate)
+                    .addComponent(chkPause))
+                .addGap(25, 25, 25)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(15, 15, 15)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -670,7 +688,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                     .addComponent(btnMovePrevious)
                     .addComponent(btnMoveNext)
                     .addComponent(btnMoveLast))
-                .addContainerGap(70, Short.MAX_VALUE))
+                .addContainerGap(63, Short.MAX_VALUE))
         );
 
         Tabs.addTab("BIỂU MẪU", jPanel2);
@@ -694,47 +712,74 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
 
     private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
         // TODO add your handling code here:
+        clear();
     }//GEN-LAST:event_btnClearActionPerformed
 
     private void btnUncheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUncheckAllActionPerformed
         // TODO add your handling code here:
+        uncheckAll();
     }//GEN-LAST:event_btnUncheckAllActionPerformed
 
     private void btnDeleteCheckedItemsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteCheckedItemsActionPerformed
         // TODO add your handling code here:
+        deleteCheckedItems();
     }//GEN-LAST:event_btnDeleteCheckedItemsActionPerformed
 
     private void btnCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateActionPerformed
         // TODO add your handling code here:
+        create();
     }//GEN-LAST:event_btnCreateActionPerformed
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
         // TODO add your handling code here:
+        update();
     }//GEN-LAST:event_btnUpdateActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
         // TODO add your handling code here:
+        delete();
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void btnMoveFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveFirstActionPerformed
         // TODO add your handling code here:
+        moveFirst();
     }//GEN-LAST:event_btnMoveFirstActionPerformed
 
     private void btnMovePreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMovePreviousActionPerformed
         // TODO add your handling code here:
+        movePrevious();
     }//GEN-LAST:event_btnMovePreviousActionPerformed
 
     private void btnMoveNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveNextActionPerformed
         // TODO add your handling code here:
+        moveNext();
     }//GEN-LAST:event_btnMoveNextActionPerformed
 
     private void btnMoveLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveLastActionPerformed
         // TODO add your handling code here:
+        moveLast();
     }//GEN-LAST:event_btnMoveLastActionPerformed
 
     private void btnCheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckAllActionPerformed
         // TODO add your handling code here:
+        checkAll();
     }//GEN-LAST:event_btnCheckAllActionPerformed
+
+    private void chkAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkAdminActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_chkAdminActionPerformed
+
+    private void chkEmloyeeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkEmloyeeActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_chkEmloyeeActionPerformed
+
+    private void chkActivateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkActivateActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_chkActivateActionPerformed
+
+    private void chkPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkPauseActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_chkPauseActionPerformed
 
     /**
      * @param args the command line arguments
@@ -806,7 +851,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JPanel pnlPhoto;
+    private javax.swing.JPanel panelAvatar;
     private javax.swing.JTable tblUsers;
     private javax.swing.JPasswordField txtConfirmPassword;
     private javax.swing.JTextField txtFullname;

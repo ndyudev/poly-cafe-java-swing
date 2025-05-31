@@ -6,13 +6,13 @@ public class XAuth {
 
     // Biến user lưu thông tin người dùng hiện tại
     public static User user = User.builder()
-            .Username("ndyudev") // Sửa thành .username()
-            .Password("ndyudev227") // Sửa thành .password()
-            .Enabled(true) // Sửa thành .enabled()
-            .Manager(true) // Sửa thành .manager()
-            .Fullname("Chauu Nhat Duyy") // Sửa thành .fullname()
-            .Photo("trump.png") // Sửa thành .photo()
-            .build(); // biến user này sẽ được thay thế sau khi đăng nhập
+            .Username("ndyudev") // Tên đăng nhập
+            .Password("ndyudev227") // Mật khẩu
+            .Enabled(true) // Trạng thái hoạt động
+            .Manager(true) // Vai trò quản lý
+            .Fullname("Chauu Nhat Duyy") // Họ tên
+            .Photo("src/main/java/poly/cafe/icons/avatar.jpg") // Đường dẫn tương đối đến file avatar.jpg trong thư mục icons
+            .build(); // Biến user này sẽ được thay thế sau khi đăng nhập
 
     // Kiểm tra xem có người dùng đang đăng nhập không
     public static boolean isAuthenticated() {
