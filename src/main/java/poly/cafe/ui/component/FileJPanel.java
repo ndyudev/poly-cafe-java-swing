@@ -3,20 +3,16 @@ package poly.cafe.ui.component;
 import java.io.File;
 import java.util.function.Consumer;
 import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import lombok.Getter;
 import lombok.Setter;
 import poly.cafe.util.XIcon;
-import poly.cafe.util.XDialog;
+
 
 public class FileJPanel extends javax.swing.JPanel {
 
+
     public FileJPanel() {
         initComponents();
-        // Đặt bộ lọc cho file chooser
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Image files", "jpg", "png"));
-        // Tạo thư mục mặc định
-        ensureFolderExists();
     }
 
     /**
@@ -47,29 +43,18 @@ public class FileJPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseActionPerformed
-        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        // TODO add your handling code here:
+        if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
             File selectedFile = fileChooser.getSelectedFile();
-            try {
-                // Đảm bảo thư mục tồn tại trước khi sao chép
-                ensureFolderExists();
-                File file = XIcon.copyTo(selectedFile, this.folder);
-                this.setFilename(file.getName());
-                if (this.fileChanged != null) {
-                    this.fileChanged.accept(file);
-                }
-            } catch (Exception e) {
-                XDialog.alert("Lỗi khi sao chép file: " + e.getMessage());
+            File file = XIcon.copyTo(selectedFile, this.folder);
+            this.setFilename(file.getName());
+            if(this.fileChanged != null){
+                this.fileChanged.accept(file);
             }
         }
     }//GEN-LAST:event_btnBrowseActionPerformed
 
-    private void ensureFolderExists() {
-        File folderFile = new File(this.folder);
-        if (!folderFile.exists()) {
-            folderFile.mkdirs();
-        }
-    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBrowse;
     private javax.swing.JFileChooser fileChooser;
@@ -78,21 +63,16 @@ public class FileJPanel extends javax.swing.JPanel {
 
     @Getter
     @Setter
-    String folder = "images"; // Đồng bộ với UserManagerJDialog
-
-    @Getter
-    @Setter
+    String folder = "files";
     Consumer<File> fileChanged;
-
-    public String getFilename() {
+    
+    public String getFilename(){
         return txtFilename.getText();
     }
-
-    public void setFilename(String filename) {
+    public void setFilename(String filename){
         txtFilename.setText(filename);
     }
-
-    public File getFile() {
+    public File getFile(){
         return new File(folder, this.getFilename());
     }
 }

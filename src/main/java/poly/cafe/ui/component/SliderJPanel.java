@@ -1,4 +1,3 @@
-
 package poly.cafe.ui.component;
 
 import java.util.function.Consumer;

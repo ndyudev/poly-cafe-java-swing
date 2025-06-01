@@ -1,11 +1,12 @@
-
 package poly.cafe.ui.component;
 
 import java.util.function.Consumer;
 import javax.swing.JRadioButton;
+import lombok.Setter;
 
 
 public class RadioJPanel extends javax.swing.JPanel {
+
 
     public RadioJPanel() {
         initComponents();

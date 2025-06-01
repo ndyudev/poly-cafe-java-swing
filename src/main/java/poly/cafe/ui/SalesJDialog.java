@@ -1,25 +1,25 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
- */
 package poly.cafe.ui;
 
-/**
- *
- * @author Chauu Nhat Duyy
- */
-public class SalesJDialog extends javax.swing.JDialog {
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.util.List;
+import javax.swing.JButton;
+import poly.cafe.dao.BillDAO;
+import poly.cafe.dao.CardDAO;
+import poly.cafe.dao.impl.BillDAOImpl;
+import poly.cafe.dao.impl.CardDAOImpl;
+import poly.cafe.entity.Bill;
+import poly.cafe.entity.Card;
 
-    /**
-     * Creates new form SalesJDialog
-     */
+
+public class SalesJDialog extends javax.swing.JDialog implements SalesController {
+
+
     public SalesJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-    }
-
-    SalesJDialog() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     /**
@@ -31,21 +31,46 @@ public class SalesJDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jScrollPane1 = new javax.swing.JScrollPane();
+        pnlCard = new javax.swing.JPanel();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Thẻ định danh");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
+
+        jScrollPane1.setBorder(null);
+
+        pnlCard.setLayout(new java.awt.GridLayout(0, 6, 5, 5));
+        jScrollPane1.setViewportView(pnlCard);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 701, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        // TODO add your handling code here:
+        this.open();
+    }//GEN-LAST:event_formWindowOpened
 
     /**
      * @param args the command line arguments
@@ -73,6 +98,9 @@ public class SalesJDialog extends javax.swing.JDialog {
             java.util.logging.Logger.getLogger(SalesJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -90,5 +118,48 @@ public class SalesJDialog extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel pnlCard;
     // End of variables declaration//GEN-END:variables
+
+@Override
+public void open() {
+    this.setLocationRelativeTo(null);
+    this.loadCards();
+}
+
+@Override
+public void showBillJDialog(int cardId) {
+    BillDAO dao = new BillDAOImpl();
+    Bill bill = dao.findServicingByCardId(cardId);
+
+    BillJDialog dialog = new BillJDialog((Frame) this.getOwner(), true);
+    dialog.setBill(bill);
+    dialog.setVisible(true);
+}
+
+private void loadCards() {
+    CardDAO dao = new CardDAOImpl();
+    List<Card> cards = dao.findAll();
+
+    pnlCard.removeAll();
+    cards.forEach(card -> {
+        pnlCard.add(this.createButton(card));
+    });
+}
+
+private JButton createButton(Card card) {
+    JButton btnCard = new JButton();
+    btnCard.setText(String.format("Card #%d", card.getId()));
+    btnCard.setPreferredSize(new Dimension(0, 80));
+    btnCard.setEnabled(card.getStatus() == 0);
+    btnCard.setBackground(btnCard.isEnabled() ? Color.GREEN : Color.GRAY);
+    btnCard.setActionCommand(String.valueOf(card.getId()));
+
+    btnCard.addActionListener((ActionEvent e) -> {
+        int cardId = Integer.parseInt(e.getActionCommand());
+        SalesJDialog.this.showBillJDialog(cardId);
+    });
+    return btnCard;
+}
 }
