@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class User {
-    private String Username;
-    private String Password;
-    private boolean Enabled;
-    private String Fullname;
+    private String username;
+    private String password;
+    private boolean enabled;
+    private String fullname;
     @Builder.Default
-    private String Photo = "photo.png";
-    private boolean Manager;
+    private String photo = "photo.png";
+    private boolean manager;
 }

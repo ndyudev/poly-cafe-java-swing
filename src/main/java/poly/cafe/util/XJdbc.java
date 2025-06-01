@@ -1,42 +1,49 @@
 package poly.cafe.util;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
- public class XJdbc {
+public class XJdbc {
 
     private static Connection connection;
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=PS44284_ChauNhatDuy_PolyCafe_ASM;encrypt=true;trustServerCertificate=true;";
-    private static final String USERNAME = "sa";
-    private static final String PASSWORD = "ndyudev227";
 
-    // Mở kết nối
     public static Connection openConnection() {
+        var driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+        var dburl = "jdbc:sqlserver://localhost:1433;database=PS44284_ChauNhatDuy_PolyCafe_ASM;encrypt=true;trustServerCertificate=true;";
+        var username = "sa";
+        var password = "ndyudev227";
+        System.out.println("Kết nôi thành công");
         try {
-            if (connection == null || connection.isClosed()) {
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-                connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-                System.out.println("Kết nối thành công");
+            if (!XJdbc.isReady()) {
+                Class.forName(driver);
+                connection = DriverManager.getConnection(dburl, username, password);
             }
-            return connection;
         } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException("Không thể kết nối CSDL", e);
+            throw new RuntimeException(e);
         }
+        return connection;
     }
 
-    // Đóng kết nối
+    /**
+     * Đóng kết nối
+     */
     public static void closeConnection() {
         try {
-            if (connection != null && !connection.isClosed()) {
+            if (XJdbc.isReady()) {
                 connection.close();
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi đóng kết nối", e);
+            throw new RuntimeException(e);
         }
     }
 
-    // Kiểm tra kết nối có sẵn sàng
+    /**
+     * Kiểm tra kết nối đã sẵn sàng hay chưa
+     * @return true nếu kết nối đã được mở
+     */
     public static boolean isReady() {
         try {
             return (connection != null && !connection.isClosed());
@@ -45,81 +52,96 @@ import java.util.List;
         }
     }
 
-    // Tạo PreparedStatement
-    private static PreparedStatement prepareStatement(String sql, Object... args) throws SQLException {
-        Connection conn = openConnection();
-        PreparedStatement stmt = sql.trim().startsWith("{")
-                ? conn.prepareCall(sql)
-                : conn.prepareStatement(sql);
-        for (int i = 0; i < args.length; i++) {
-            stmt.setObject(i + 1, args[i]);
+    /**
+     * Thao tác dữ liệu
+     *
+     * @param sql câu lệnh SQL (INSERT, UPDATE, DELETE)
+     * @param values các giá trị cung cấp cho các tham số trong SQL
+     * @return số lượng bản ghi đã thực hiện
+     * @throws RuntimeException không thực thi được câu lệnh SQL
+     */
+    public static int executeUpdate(String sql, Object... values) {
+        try {
+            var stmt = XJdbc.getStmt(sql, values);
+            return stmt.executeUpdate();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Truy vấn dữ liệu
+     *
+     * @param sql câu lệnh SQL (SELECT)
+     * @param values các giá trị cung cấp cho các tham số trong SQL
+     * @return tập kết quả truy vấn
+     * @throws RuntimeException không thực thi được câu lệnh SQL
+     */
+    public static ResultSet executeQuery(String sql, Object... values) {
+        try {
+            var stmt = XJdbc.getStmt(sql, values);
+            return stmt.executeQuery();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Truy vấn một giá trị
+     *
+     * @param <T> kiểu dữ liệu kết quả
+     * @param sql câu lệnh SQL (SELECT)
+     * @param values các giá trị cung cấp cho các tham số trong SQL
+     * @return giá trị truy vấn hoặc null
+     * @throws RuntimeException không thực thi được câu lệnh SQL
+     */
+    public static <T> T getValue(String sql, Object... values) {
+        try {
+            var resultSet = XJdbc.executeQuery(sql, values);
+            if (resultSet.next()) {
+                return (T) resultSet.getObject(1);
+            }
+            return null;
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Tạo PreparedStatement từ câu lệnh SQL/PROC
+     *
+     * @param sql câu lệnh SQL/PROC
+     * @param values các giá trị cung cấp cho các tham số trong SQL/PROC
+     * @return đối tượng đã tạo
+     * @throws SQLException không tạo được PreparedStatement
+     */
+    private static PreparedStatement getStmt(String sql, Object... values) throws SQLException {
+        var conn = XJdbc.openConnection();
+        var stmt = sql.trim().startsWith("{") ? conn.prepareCall(sql) : conn.prepareStatement(sql);
+        for (int i = 0; i < values.length; i++) {
+            stmt.setObject(i + 1, values[i]);
         }
         return stmt;
     }
 
-    // Thực thi INSERT/UPDATE/DELETE
-    public static int executeUpdate(String sql, Object... args) {
-        try (PreparedStatement stmt = prepareStatement(sql, args)) {
-            return stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi thực thi SQL: " + sql, e);
-        }
+    public static void main(String[] args) {
+        demo1();
+        demo2();
+        demo3();
     }
 
-    // Truy vấn SELECT → ResultSet
-    public static ResultSet executeQuery(String sql, Object... args) {
-        try {
-            PreparedStatement stmt = prepareStatement(sql, args);
-            return stmt.executeQuery(); // ResultSet cần được xử lý bên ngoài
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi truy vấn SQL: " + sql, e);
-        }
+    private static void demo1() {
+        String sql = "SELECT * FROM Drinks WHERE UnitPrice BETWEEN ? AND ?";
+        var rs = XJdbc.executeQuery(sql, 1.5, 5.0);
     }
 
-    // Truy vấn giá trị đơn
-    public static <T> T getValue(String sql, Object... args) {
-        try (ResultSet rs = executeQuery(sql, args)) {
-            if (rs.next()) {
-                return (T) rs.getObject(1);
-            }
-            return null;
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi truy vấn giá trị", e);
-        }
+    private static void demo2() {
+        String sql = "SELECT max(UnitPrice) FROM Drinks WHERE UnitPrice > ?";
+        var maxPrice = XJdbc.getValue(sql, 1.5);
     }
 
-    // Lấy danh sách đối tượng (nếu có dùng thư viện BeanUtils thì sẽ dễ)
-    public static <T> List<T> getBeanList(Class<T> type, String sql, Object... args) {
-        try (ResultSet rs = executeQuery(sql, args)) {
-            List<T> list = new ArrayList<>();
-            while (rs.next()) {
-                T entity = type.getDeclaredConstructor().newInstance();
-                ResultSetMetaData meta = rs.getMetaData();
-                for (int i = 1; i <= meta.getColumnCount(); i++) {
-                    String column = meta.getColumnLabel(i);
-                    Object value = rs.getObject(i);
-                    type.getDeclaredField(column).setAccessible(true);
-                    type.getDeclaredField(column).set(entity, value);
-                }
-                list.add(entity);
-            }
-            return list;
-        } catch (Exception e) {
-            throw new RuntimeException("Lỗi ánh xạ danh sách đối tượng", e);
-        }
-    }
-
-    // Lấy 1 đối tượng
-    public static <T> T getSingleBean(Class<T> type, String sql, Object... args) {
-        List<T> list = getBeanList(type, sql, args);
-        return list.isEmpty() ? null : list.get(0);
-    }
-
-    public static Connection getConnection() {
-        return openConnection();
-    }
-
-    public static void update(String sql, Object... args) {
-        executeUpdate(sql, args);
+    private static void demo3() {
+        String sql = "DELETE FROM Drinks WHERE UnitPrice < ?";
+        var count = XJdbc.executeUpdate(sql, 0.0);
     }
 }

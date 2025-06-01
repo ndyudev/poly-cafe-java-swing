@@ -7,7 +7,6 @@ import lombok.Setter;
 import poly.cafe.util.TimeRange;
 import poly.cafe.util.XDate;
 
-
 public class TimeFilterJPanel extends javax.swing.JPanel {
 
     /**

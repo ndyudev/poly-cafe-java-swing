@@ -1,410 +1,112 @@
 package poly.cafe.ui.manager;
 
+import java.util.List;
+import javax.swing.table.DefaultTableModel;
 import poly.cafe.dao.UserDAO;
 import poly.cafe.dao.impl.UserDAOImpl;
 import poly.cafe.entity.User;
-import poly.cafe.util.XAuth;
 import poly.cafe.util.XDialog;
-import javax.swing.table.DefaultTableModel;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
+
 
 public class UserManagerJDialog extends javax.swing.JDialog implements UserController {
 
-    private UserDAO userDAO;
-    private List<User> userList;
-    private int currentRow = -1;
 
     public UserManagerJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
-        userDAO = new UserDAOImpl();
         initComponents();
-        init();
-        open();
-    }
-
-    @Override
-    public void open() {
-        setTitle("Quản lý người dùng");
-        setLocationRelativeTo(null);
-        fillToTable();
-        setEditable(false);
-        updateNavigationButtons();
-    }
-
-    @Override
-    public void setForm(User user) {
-        txtUsername.setText(user.getUsername());
-        txtFullname.setText(user.getFullname());
-        txtPassword.setText(user.getPassword());
-        txtConfirmPassword.setText(user.getPassword());
-        chkAdmin.setSelected(user.isManager());
-        chkEmloyee.setSelected(!user.isManager());
-        chkActivate.setSelected(user.isEnabled());
-        chkPause.setSelected(!user.isEnabled());
-    }
-
-    @Override
-    public User getForm() {
-        if (!validateForm()) {
-            return null;
-        }
-
-        String username = txtUsername.getText().trim();
-        String password = new String(txtPassword.getPassword()).trim();
-        String fullname = txtFullname.getText().trim();
-        boolean manager = chkAdmin.isSelected();
-        boolean enabled = chkActivate.isSelected();
-
-        return User.builder()
-                .Username(username)
-                .Password(password)
-                .Fullname(fullname)
-                .Manager(manager)
-                .Enabled(enabled)
-                .build(); // Loại bỏ Photo hoàn toàn
-    }
-
-    private boolean validateForm() {
-        String username = txtUsername.getText().trim();
-        String password = new String(txtPassword.getPassword()).trim();
-        String confirmPassword = new String(txtConfirmPassword.getPassword()).trim();
-        String fullname = txtFullname.getText().trim();
-
-        if (username.isEmpty() || password.isEmpty() || fullname.isEmpty()) {
-            XDialog.alert("Vui lòng nhập đầy đủ thông tin!");
-            return false;
-        }
-
-        if (!password.equals(confirmPassword)) {
-            XDialog.alert("Mật khẩu xác nhận không khớp!");
-            return false;
-        }
-
-        if (txtUsername.isEditable() && userList.stream().anyMatch(u -> u.getUsername().equals(username))) {
-            XDialog.alert("Tên đăng nhập đã tồn tại!");
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public void fillToTable() {
-        userList = userDAO.findAll();
-        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
-        model.setRowCount(0);
-
-        for (User user : userList) {
-            model.addRow(new Object[]{
-                user.getUsername(),
-                user.getPassword(),
-                user.getFullname(),
-                "", // Loại bỏ cột ảnh, thay bằng chuỗi rỗng
-                user.isManager() ? "Quản lý" : "Nhân viên",
-                user.isEnabled() ? "Hoạt động" : "Tạm dừng",
-                false
-            });
-        }
-        currentRow = userList.isEmpty() ? -1 : 0;
-        if (currentRow >= 0) {
-            setForm(userList.get(currentRow));
-            tblUsers.setRowSelectionInterval(currentRow, currentRow);
-        }
-        updateNavigationButtons();
-    }
-
-    @Override
-    public void edit() {
-        int row = tblUsers.getSelectedRow();
-        if (row >= 0) {
-            currentRow = row;
-            setForm(userList.get(row));
-            setEditable(true);
-            txtUsername.setEditable(false);
-            Tabs.setSelectedIndex(1);
-            updateNavigationButtons();
-        }
-    }
-
-    @Override
-    public void create() {
-        User user = getForm();
-        if (user == null) {
-            return;
-        }
-
-        try {
-            userDAO.create(user);
-            XDialog.alert("Tạo người dùng thành công!");
-            fillToTable();
-            clear();
-        } catch (Exception e) {
-            System.out.println("Lỗi tạo user: " + e.getMessage()); // Log lỗi để debug
-            e.printStackTrace(); // In stack trace chi tiết
-            XDialog.alert("Lỗi khi tạo người dùng: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public void update() {
-        User user = getForm();
-        if (user == null) {
-            return;
-        }
-
-        try {
-            userDAO.update(user);
-            XDialog.alert("Cập nhật người dùng thành công!");
-            fillToTable();
-            clear();
-        } catch (Exception e) {
-            XDialog.alert("Lỗi khi cập nhật người dùng: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public void delete() {
-        if (currentRow < 0) {
-            XDialog.alert("Vui lòng chọn người dùng để xóa!");
-            return;
-        }
-        if (XAuth.isAuthenticated() && userList.get(currentRow).getUsername().equals(XAuth.user.getUsername())) {
-            XDialog.alert("Không thể xóa tài khoản đang đăng nhập!");
-            return;
-        }
-        if (XDialog.confirm("Bạn có chắc muốn xóa người dùng này?")) {
-            try {
-                userDAO.deleteById(userList.get(currentRow).getUsername());
-                XDialog.alert("Xóa người dùng thành công!");
-                fillToTable();
-                clear();
-            } catch (Exception e) {
-                XDialog.alert("Lỗi khi xóa người dùng: " + e.getMessage());
-            }
-        }
-    }
-
-    @Override
-    public void clear() {
-        txtUsername.setText("");
-        txtFullname.setText("");
-        txtPassword.setText("");
-        txtConfirmPassword.setText("");
-        chkAdmin.setSelected(false);
-        chkEmloyee.setSelected(true);
-        chkActivate.setSelected(true);
-        chkPause.setSelected(false);
-        setEditable(true);
-        txtUsername.setEditable(true);
-        currentRow = -1;
-        updateNavigationButtons();
-    }
-
-    @Override
-    public void setEditable(boolean editable) {
-        txtUsername.setEditable(editable);
-        txtFullname.setEditable(editable);
-        txtPassword.setEditable(editable);
-        txtConfirmPassword.setEditable(editable);
-        chkAdmin.setEnabled(editable);
-        chkEmloyee.setEnabled(editable);
-        chkActivate.setEnabled(editable);
-        chkPause.setEnabled(editable);
-        btnCreate.setEnabled(editable);
-        btnUpdate.setEnabled(editable && currentRow >= 0);
-        btnDelete.setEnabled(editable && currentRow >= 0);
-    }
-
-    @Override
-    public void checkAll() {
-        for (int i = 0; i < tblUsers.getRowCount(); i++) {
-            tblUsers.setValueAt(true, i, 6);
-        }
-    }
-
-    @Override
-    public void uncheckAll() {
-        for (int i = 0; i < tblUsers.getRowCount(); i++) {
-            tblUsers.setValueAt(false, i, 6);
-        }
-    }
-
-    @Override
-    public void deleteCheckedItems() {
-        if (XDialog.confirm("Bạn có chắc muốn xóa các người dùng được chọn?")) {
-            try {
-                boolean hasDeletion = false;
-                for (int i = 0; i < tblUsers.getRowCount(); i++) {
-                    if ((Boolean) tblUsers.getValueAt(i, 6)) {
-                        if (XAuth.isAuthenticated() && userList.get(i).getUsername().equals(XAuth.user.getUsername())) {
-                            XDialog.alert("Không thể xóa tài khoản đang đăng nhập!");
-                            continue;
-                        }
-                        userDAO.deleteById(userList.get(i).getUsername());
-                        hasDeletion = true;
-                    }
-                }
-                if (hasDeletion) {
-                    XDialog.alert("Xóa các người dùng được chọn thành công!");
-                    fillToTable();
-                    clear();
-                }
-            } catch (Exception e) {
-                XDialog.alert("Lỗi khi xóa các người dùng: " + e.getMessage());
-            }
-        }
-    }
-
-    @Override
-    public void moveFirst() {
-        if (!userList.isEmpty()) {
-            currentRow = 0;
-            moveTo(currentRow);
-        }
-    }
-
-    @Override
-    public void movePrevious() {
-        if (currentRow > 0) {
-            currentRow--;
-            moveTo(currentRow);
-        }
-    }
-
-    @Override
-    public void moveNext() {
-        if (currentRow < userList.size() - 1) {
-            currentRow++;
-            moveTo(currentRow);
-        }
-    }
-
-    @Override
-    public void moveLast() {
-        if (!userList.isEmpty()) {
-            currentRow = userList.size() - 1;
-            moveTo(currentRow);
-        }
-    }
-
-    @Override
-    public void moveTo(int rowIndex) {
-        if (rowIndex >= 0 && rowIndex < userList.size()) {
-            currentRow = rowIndex;
-            setForm(userList.get(rowIndex));
-            tblUsers.setRowSelectionInterval(rowIndex, rowIndex);
-            Tabs.setSelectedIndex(1);
-            setEditable(true);
-            txtUsername.setEditable(false);
-            updateNavigationButtons();
-        }
-    }
-
-    private void updateNavigationButtons() {
-        btnMoveFirst.setEnabled(currentRow > 0);
-        btnMovePrevious.setEnabled(currentRow > 0);
-        btnMoveNext.setEnabled(currentRow < userList.size() - 1);
-        btnMoveLast.setEnabled(currentRow < userList.size() - 1);
-    }
-
-    private void syncCheckboxes() {
-        chkAdmin.addActionListener(e -> {
-            if (chkAdmin.isSelected()) {
-                chkEmloyee.setSelected(false);
-            }
-        });
-        chkEmloyee.addActionListener(e -> {
-            if (chkEmloyee.isSelected()) {
-                chkAdmin.setSelected(false);
-            }
-        });
-        chkActivate.addActionListener(e -> {
-            if (chkActivate.isSelected()) {
-                chkPause.setSelected(false);
-            }
-        });
-        chkPause.addActionListener(e -> {
-            if (chkPause.isSelected()) {
-                chkActivate.setSelected(false);
-            }
-        });
-    }
-
-    private void init() {
-        tblUsers.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    edit();
-                }
-            }
-        });
-
-        syncCheckboxes();
     }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        Tabs = new javax.swing.JTabbedPane();
+        tabs = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        jScrollPane1 = new javax.swing.JScrollPane();
         tblUsers = new javax.swing.JTable();
+        jPanel3 = new javax.swing.JPanel();
         btnCheckAll = new javax.swing.JButton();
         btnUncheckAll = new javax.swing.JButton();
         btnDeleteCheckedItems = new javax.swing.JButton();
-        jSeparator1 = new javax.swing.JSeparator();
         jPanel2 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        txtUsername = new javax.swing.JTextField();
-        txtFullname = new javax.swing.JTextField();
-        txtPassword = new javax.swing.JPasswordField();
-        txtConfirmPassword = new javax.swing.JPasswordField();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        chkAdmin = new javax.swing.JCheckBox();
-        chkActivate = new javax.swing.JCheckBox();
-        chkEmloyee = new javax.swing.JCheckBox();
-        chkPause = new javax.swing.JCheckBox();
-        jSeparator2 = new javax.swing.JSeparator();
+        jPanel4 = new javax.swing.JPanel();
+        jPanel7 = new javax.swing.JPanel();
         btnCreate = new javax.swing.JButton();
         btnUpdate = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
         btnClear = new javax.swing.JButton();
-        btnMoveLast = new javax.swing.JButton();
+        jPanel8 = new javax.swing.JPanel();
         btnMoveFirst = new javax.swing.JButton();
         btnMovePrevious = new javax.swing.JButton();
         btnMoveNext = new javax.swing.JButton();
-        panelAvatar = new javax.swing.JPanel();
+        btnMoveLast = new javax.swing.JButton();
+        jSeparator1 = new javax.swing.JSeparator();
+        jPanel5 = new javax.swing.JPanel();
+        jPanel6 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        txtUsername = new javax.swing.JTextField();
+        txtFullname = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        txtPassword = new javax.swing.JPasswordField();
+        txtConfirm = new javax.swing.JPasswordField();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        rdoManager = new poly.cafe.ui.component.RadioJPanel();
+        rdoEnabled = new poly.cafe.ui.component.RadioJPanel();
+        pnlPhoto = new poly.cafe.ui.component.ImageJPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Quản lý tài khoản");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
+
+        jPanel1.setLayout(new java.awt.BorderLayout(0, 5));
 
         tblUsers.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
+
             },
             new String [] {
-                "Tên đăng nhập", "Mật khẩu", "Họ và tên", "Hình ảnh", "Vai trò", "Trạng thái", "Select"
+                "Tên đăng nhập", "Mật khẩu", "Họ và tên", "Hình ảnh", "Vai trò", "Trạng thái", ""
             }
         ) {
             Class[] types = new Class [] {
                 java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, true
+            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
         });
-        jScrollPane2.setViewportView(tblUsers);
+        tblUsers.setRowHeight(25);
+        tblUsers.setRowMargin(1);
+        tblUsers.setSelectionBackground(new java.awt.Color(255, 255, 0));
+        tblUsers.setSelectionForeground(new java.awt.Color(255, 0, 0));
+        tblUsers.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tblUsers.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tblUsers.setShowGrid(true);
+        tblUsers.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblUsersMouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(tblUsers);
+
+        jPanel1.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+        jPanel3.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 2, 2));
 
         btnCheckAll.setText("Chọn tất cả");
         btnCheckAll.addActionListener(new java.awt.event.ActionListener() {
@@ -412,6 +114,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnCheckAllActionPerformed(evt);
             }
         });
+        jPanel3.add(btnCheckAll);
 
         btnUncheckAll.setText("Bỏ chọn tất cả");
         btnUncheckAll.addActionListener(new java.awt.event.ActionListener() {
@@ -419,6 +122,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnUncheckAllActionPerformed(evt);
             }
         });
+        jPanel3.add(btnUncheckAll);
 
         btnDeleteCheckedItems.setText("Xóa các mục chọn");
         btnDeleteCheckedItems.addActionListener(new java.awt.event.ActionListener() {
@@ -426,88 +130,17 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnDeleteCheckedItemsActionPerformed(evt);
             }
         });
+        jPanel3.add(btnDeleteCheckedItems);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(btnCheckAll)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnUncheckAll)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnDeleteCheckedItems))
-                    .addComponent(jSeparator1))
-                .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 683, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 324, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(4, 4, 4)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnUncheckAll)
-                    .addComponent(btnDeleteCheckedItems)
-                    .addComponent(btnCheckAll))
-                .addGap(14, 14, 14))
-        );
+        jPanel1.add(jPanel3, java.awt.BorderLayout.PAGE_END);
 
-        Tabs.addTab("DANH SÁCH", jPanel1);
+        tabs.addTab("DANH SÁCH", jPanel1);
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
-        jLabel1.setText("Tên đăng nhập");
+        jPanel2.setLayout(new java.awt.BorderLayout());
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
-        jLabel2.setText("Xác nhận mật khẩu");
+        jPanel4.setLayout(new java.awt.BorderLayout(0, 5));
 
-        jLabel3.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
-        jLabel3.setText("Họ và tên");
-
-        jLabel4.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
-        jLabel4.setText("Mật khẩu");
-
-        jLabel5.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
-        jLabel5.setText("Vai trò");
-
-        jLabel6.setFont(new java.awt.Font("Segoe UI", 2, 14)); // NOI18N
-        jLabel6.setText("Trạng thái");
-
-        chkAdmin.setText("Quản lý");
-        chkAdmin.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkAdminActionPerformed(evt);
-            }
-        });
-
-        chkActivate.setText("Hoạt động");
-        chkActivate.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkActivateActionPerformed(evt);
-            }
-        });
-
-        chkEmloyee.setText("Nhân viên");
-        chkEmloyee.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkEmloyeeActionPerformed(evt);
-            }
-        });
-
-        chkPause.setText("Tạm dừng");
-        chkPause.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkPauseActionPerformed(evt);
-            }
-        });
+        jPanel7.setLayout(new java.awt.GridLayout(1, 0, 2, 2));
 
         btnCreate.setText("Tạo mới");
         btnCreate.addActionListener(new java.awt.event.ActionListener() {
@@ -515,6 +148,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnCreateActionPerformed(evt);
             }
         });
+        jPanel7.add(btnCreate);
 
         btnUpdate.setText("Cập nhật");
         btnUpdate.addActionListener(new java.awt.event.ActionListener() {
@@ -522,6 +156,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnUpdateActionPerformed(evt);
             }
         });
+        jPanel7.add(btnUpdate);
 
         btnDelete.setText("Xóa");
         btnDelete.addActionListener(new java.awt.event.ActionListener() {
@@ -529,20 +164,19 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnDeleteActionPerformed(evt);
             }
         });
+        jPanel7.add(btnDelete);
 
-        btnClear.setText("Nhâp mới");
+        btnClear.setText("Nhập mới");
         btnClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnClearActionPerformed(evt);
             }
         });
+        jPanel7.add(btnClear);
 
-        btnMoveLast.setText(">|");
-        btnMoveLast.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnMoveLastActionPerformed(evt);
-            }
-        });
+        jPanel4.add(jPanel7, java.awt.BorderLayout.LINE_START);
+
+        jPanel8.setLayout(new java.awt.GridLayout(1, 0, 2, 2));
 
         btnMoveFirst.setText("|<");
         btnMoveFirst.addActionListener(new java.awt.event.ActionListener() {
@@ -550,6 +184,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnMoveFirstActionPerformed(evt);
             }
         });
+        jPanel8.add(btnMoveFirst);
 
         btnMovePrevious.setText("<<");
         btnMovePrevious.addActionListener(new java.awt.event.ActionListener() {
@@ -557,6 +192,7 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnMovePreviousActionPerformed(evt);
             }
         });
+        jPanel8.add(btnMovePrevious);
 
         btnMoveNext.setText(">>");
         btnMoveNext.addActionListener(new java.awt.event.ActionListener() {
@@ -564,222 +200,170 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
                 btnMoveNextActionPerformed(evt);
             }
         });
+        jPanel8.add(btnMoveNext);
 
-        javax.swing.GroupLayout panelAvatarLayout = new javax.swing.GroupLayout(panelAvatar);
-        panelAvatar.setLayout(panelAvatarLayout);
-        panelAvatarLayout.setHorizontalGroup(
-            panelAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 154, Short.MAX_VALUE)
-        );
-        panelAvatarLayout.setVerticalGroup(
-            panelAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
+        btnMoveLast.setText(">|");
+        btnMoveLast.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnMoveLastActionPerformed(evt);
+            }
+        });
+        jPanel8.add(btnMoveLast);
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        jPanel4.add(jPanel8, java.awt.BorderLayout.LINE_END);
+        jPanel4.add(jSeparator1, java.awt.BorderLayout.PAGE_START);
+
+        jPanel2.add(jPanel4, java.awt.BorderLayout.PAGE_END);
+
+        jPanel6.setLayout(new java.awt.GridLayout(0, 2, 5, 5));
+
+        jLabel1.setText("Tên đăng nhập");
+        jLabel1.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        jPanel6.add(jLabel1);
+
+        jLabel2.setText("Họ và tên");
+        jLabel2.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        jPanel6.add(jLabel2);
+        jPanel6.add(txtUsername);
+        jPanel6.add(txtFullname);
+
+        jLabel3.setText("Mật khẩu");
+        jLabel3.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        jPanel6.add(jLabel3);
+
+        jLabel4.setText("Xác nhận mật khẩu");
+        jLabel4.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        jPanel6.add(jLabel4);
+        jPanel6.add(txtPassword);
+        jPanel6.add(txtConfirm);
+
+        jLabel5.setText("Vai trò");
+        jLabel5.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        jPanel6.add(jLabel5);
+
+        jLabel6.setText("Trạng thái");
+        jLabel6.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        jPanel6.add(jLabel6);
+
+        rdoManager.setItems(new String[] {"Quản lý", "Nhân viên"});
+        jPanel6.add(rdoManager);
+
+        rdoEnabled.setItems(new String[] {"Hoạt động", "Tạm dừng"});
+        jPanel6.add(rdoEnabled);
+
+        pnlPhoto.setFolder("photos");
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(panelAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel1)
-                                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 238, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                        .addGap(6, 6, 6)
-                                        .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel2Layout.createSequentialGroup()
-                                        .addGap(63, 63, 63)
-                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jLabel2)
-                                            .addComponent(jLabel3)
-                                            .addComponent(jLabel6)
-                                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                                .addGap(6, 6, 6)
-                                                .addComponent(chkActivate)
-                                                .addGap(18, 18, 18)
-                                                .addComponent(chkPause)))
-                                        .addContainerGap(18, Short.MAX_VALUE))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(txtFullname, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(txtConfirmPassword, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addContainerGap())))
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel2Layout.createSequentialGroup()
-                                        .addGap(6, 6, 6)
-                                        .addComponent(chkAdmin)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(chkEmloyee))
-                                    .addComponent(jLabel4)
-                                    .addComponent(jLabel5))
-                                .addGap(0, 0, Short.MAX_VALUE))))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jSeparator2)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(btnCreate)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnUpdate)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnDelete)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnClear)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(btnMoveFirst, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnMovePrevious, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnMoveNext, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnMoveLast, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addContainerGap())))
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel3))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtFullname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(47, 47, 47)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel2))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtConfirmPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel6)))
-                    .addComponent(panelAvatar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(pnlPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkAdmin)
-                    .addComponent(chkEmloyee)
-                    .addComponent(chkActivate)
-                    .addComponent(chkPause))
-                .addGap(25, 25, 25)
-                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(15, 15, 15)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnClear)
-                    .addComponent(btnDelete)
-                    .addComponent(btnUpdate)
-                    .addComponent(btnCreate)
-                    .addComponent(btnMoveFirst)
-                    .addComponent(btnMovePrevious)
-                    .addComponent(btnMoveNext)
-                    .addComponent(btnMoveLast))
-                .addContainerGap(63, Short.MAX_VALUE))
+                .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, 502, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(pnlPhoto, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        Tabs.addTab("BIỂU MẪU", jPanel2);
+        jPanel2.add(jPanel5, java.awt.BorderLayout.CENTER);
+
+        tabs.addTab("BIỂU MẪU", jPanel2);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(Tabs)
+                .addComponent(tabs)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(Tabs)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(tabs, javax.swing.GroupLayout.DEFAULT_SIZE, 276, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         // TODO add your handling code here:
-        clear();
-    }//GEN-LAST:event_btnClearActionPerformed
+        this.open();
+    }//GEN-LAST:event_formWindowOpened
+
+    private void tblUsersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblUsersMouseClicked
+        // TODO add your handling code here:
+        if (evt.getClickCount() == 2) {
+            this.edit();
+        }
+    }//GEN-LAST:event_tblUsersMouseClicked
+
+    private void btnCheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckAllActionPerformed
+        // TODO add your handling code here:
+        this.checkAll();
+    }//GEN-LAST:event_btnCheckAllActionPerformed
 
     private void btnUncheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUncheckAllActionPerformed
         // TODO add your handling code here:
-        uncheckAll();
+        this.uncheckAll();
     }//GEN-LAST:event_btnUncheckAllActionPerformed
 
     private void btnDeleteCheckedItemsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteCheckedItemsActionPerformed
         // TODO add your handling code here:
-        deleteCheckedItems();
+        this.deleteCheckedItems();
     }//GEN-LAST:event_btnDeleteCheckedItemsActionPerformed
 
     private void btnCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateActionPerformed
         // TODO add your handling code here:
-        create();
+        this.create();
     }//GEN-LAST:event_btnCreateActionPerformed
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
         // TODO add your handling code here:
-        update();
+        this.update();
     }//GEN-LAST:event_btnUpdateActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
         // TODO add your handling code here:
-        delete();
+        this.delete();
     }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
+        // TODO add your handling code here:
+        this.clear();
+    }//GEN-LAST:event_btnClearActionPerformed
 
     private void btnMoveFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveFirstActionPerformed
         // TODO add your handling code here:
-        moveFirst();
+        this.moveFirst();
     }//GEN-LAST:event_btnMoveFirstActionPerformed
 
     private void btnMovePreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMovePreviousActionPerformed
         // TODO add your handling code here:
-        movePrevious();
+        this.movePrevious();
     }//GEN-LAST:event_btnMovePreviousActionPerformed
 
     private void btnMoveNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveNextActionPerformed
         // TODO add your handling code here:
-        moveNext();
+        this.moveNext();
     }//GEN-LAST:event_btnMoveNextActionPerformed
 
     private void btnMoveLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveLastActionPerformed
         // TODO add your handling code here:
-        moveLast();
+        this.moveLast();
     }//GEN-LAST:event_btnMoveLastActionPerformed
-
-    private void btnCheckAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckAllActionPerformed
-        // TODO add your handling code here:
-        checkAll();
-    }//GEN-LAST:event_btnCheckAllActionPerformed
-
-    private void chkAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkAdminActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_chkAdminActionPerformed
-
-    private void chkEmloyeeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkEmloyeeActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_chkEmloyeeActionPerformed
-
-    private void chkActivateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkActivateActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_chkActivateActionPerformed
-
-    private void chkPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkPauseActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_chkPauseActionPerformed
 
     /**
      * @param args the command line arguments
@@ -807,6 +391,9 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
             java.util.logging.Logger.getLogger(UserManagerJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -824,7 +411,6 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTabbedPane Tabs;
     private javax.swing.JButton btnCheckAll;
     private javax.swing.JButton btnClear;
     private javax.swing.JButton btnCreate;
@@ -836,10 +422,6 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
     private javax.swing.JButton btnMovePrevious;
     private javax.swing.JButton btnUncheckAll;
     private javax.swing.JButton btnUpdate;
-    private javax.swing.JCheckBox chkActivate;
-    private javax.swing.JCheckBox chkAdmin;
-    private javax.swing.JCheckBox chkEmloyee;
-    private javax.swing.JCheckBox chkPause;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -848,14 +430,188 @@ public class UserManagerJDialog extends javax.swing.JDialog implements UserContr
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JPanel panelAvatar;
+    private poly.cafe.ui.component.ImageJPanel pnlPhoto;
+    private poly.cafe.ui.component.RadioJPanel rdoEnabled;
+    private poly.cafe.ui.component.RadioJPanel rdoManager;
+    private javax.swing.JTabbedPane tabs;
     private javax.swing.JTable tblUsers;
-    private javax.swing.JPasswordField txtConfirmPassword;
+    private javax.swing.JPasswordField txtConfirm;
     private javax.swing.JTextField txtFullname;
     private javax.swing.JPasswordField txtPassword;
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
+
+    UserDAO dao = new UserDAOImpl();
+    List<User> items = List.of();
+
+    @Override
+    public void open() {
+        this.setLocationRelativeTo(null);
+        this.fillToTable();
+        this.clear();
+    }
+
+    @Override
+    public void fillToTable() {
+        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
+        model.setRowCount(0);
+
+        items = dao.findAll();
+        items.forEach(item -> {
+            Object[] rowData = {
+                item.getUsername(),
+                item.getPassword(),
+                item.getFullname(),
+                item.getPhoto(),
+                item.isManager() ? "Quản lý" : "Nhân viên",
+                item.isEnabled() ? "Hoạt động" : "Tạm dừng",
+                false
+            };
+            model.addRow(rowData);
+        });
+    }
+
+    @Override
+    public void edit() {
+        User entity = items.get(tblUsers.getSelectedRow());
+        this.setForm(entity);
+        this.setEditable(true);
+        tabs.setSelectedIndex(1);
+    }
+
+    @Override
+    public void checkAll() {
+        this.setCheckedAll(true);
+    }
+
+    @Override
+    public void uncheckAll() {
+        this.setCheckedAll(false);
+    }
+    private void setCheckedAll(boolean checked) {
+        for (int i = 0; i < tblUsers.getRowCount(); i++) {
+            tblUsers.setValueAt(checked, i, 6);
+        }
+    }
+
+    @Override
+    public void deleteCheckedItems() {
+        if (XDialog.confirm("Bạn thực sự muốn xóa các mục chọn?")) {
+            for (int i = 0; i < tblUsers.getRowCount(); i++) {
+                if ((Boolean) tblUsers.getValueAt(i, 6)) {
+                    dao.deleteById(items.get(i).getUsername());
+                }
+            }
+            this.fillToTable();
+        }
+    }
+
+    @Override
+    public void setForm(User entity) {
+        txtUsername.setText(entity.getUsername());
+        txtPassword.setText(entity.getPassword());
+        txtConfirm.setText(entity.getPassword());
+        rdoEnabled.setIndex(entity.isEnabled() ? 0 : 1);
+        txtFullname.setText(entity.getFullname());
+        pnlPhoto.setIcon(entity.getPhoto());
+        rdoManager.setIndex(entity.isManager() ? 0 : 1);
+    }
+
+    @Override
+    public User getForm() {
+        User entity = new User();
+        entity.setUsername(txtUsername.getText());
+        entity.setPassword(new String(txtPassword.getPassword()));
+        entity.setEnabled(rdoEnabled.getIndex() == 0);
+        entity.setFullname(txtFullname.getText());
+        entity.setPhoto(pnlPhoto.getIcon());
+        entity.setManager(rdoManager.getIndex() == 0);
+        return entity;
+    }
+
+    @Override
+    public void create() {
+        User entity = this.getForm();
+        dao.create(entity);
+        this.fillToTable();
+        this.clear();
+    }
+
+    @Override
+    public void update() {
+        User entity = this.getForm();
+        dao.update(entity);
+        this.fillToTable();
+    }
+
+    @Override
+    public void delete() {
+        if (XDialog.confirm("Bạn thực sự muốn xóa?")) {
+            String id = txtUsername.getText();
+            dao.deleteById(id);
+            this.fillToTable();
+            this.clear();
+        }
+    }
+
+    @Override
+    public void clear() {
+        this.setForm(new User());
+        this.setEditable(false);
+    }
+
+    @Override
+    public void setEditable(boolean editable) {
+        txtUsername.setEnabled(!editable);
+        btnCreate.setEnabled(!editable);
+        btnUpdate.setEnabled(editable);
+        btnDelete.setEnabled(editable);
+
+        int rowCount = tblUsers.getRowCount();
+        btnMoveFirst.setEnabled(editable && rowCount > 0);
+        btnMovePrevious.setEnabled(editable && rowCount > 0);
+        btnMoveNext.setEnabled(editable && rowCount > 0);
+        btnMoveLast.setEnabled(editable && rowCount > 0);
+    }
+
+    @Override
+    public void moveFirst() {
+        this.moveTo(0);
+    }
+
+    @Override
+    public void movePrevious() {
+        this.moveTo(tblUsers.getSelectedRow() - 1);
+    }
+
+    @Override
+    public void moveNext() {
+        this.moveTo(tblUsers.getSelectedRow() + 1);
+    }
+
+    @Override
+    public void moveLast() {
+        this.moveTo(tblUsers.getRowCount() - 1);
+    }
+
+    @Override
+    public void moveTo(int index) {
+        if (index < 0) {
+            this.moveLast();
+        } else if (index >= tblUsers.getRowCount()) {
+            this.moveFirst();
+        } else {
+            tblUsers.clearSelection();
+            tblUsers.setRowSelectionInterval(index, index);
+            this.edit();
+        }
+    }
 }

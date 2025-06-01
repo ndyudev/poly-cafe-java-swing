@@ -8,12 +8,12 @@ import poly.cafe.util.XQuery;
 
 public class UserDAOImpl implements UserDAO {
 
-    String createSql = "INSERT INTO Users(Username, Password, Enabled, Fullname, Photo, Manager) VALUES(?, ?, ?, ?, ?, ?)";
-    String updateSql = "UPDATE Users SET Password=?, Enabled=?, Fullname=?, Photo=?, Manager=? WHERE Username=?";
-    String deleteSql = "DELETE FROM Users WHERE Username=?";
-    String findAllSql = "SELECT * FROM Users";
-    String findByIdSql = "SELECT * FROM Users WHERE Username=?";
-    String findByNameSql = "SELECT * FROM Users WHERE Fullname LIKE ?";
+    private final String createSql = "INSERT INTO Users(Username, Password, Enabled, Fullname, Photo, Manager) VALUES(?, ?, ?, ?, ?, ?)";
+    private final String updateSql = "UPDATE Users SET Password=?, Enabled=?, Fullname=?, Photo=?, Manager=? WHERE Username=?";
+    private final String deleteByIdSql = "DELETE FROM Users WHERE Username=?";
+    
+    private final String findAllSql = "SELECT * FROM Users";
+    private final String findByIdSql = "SELECT * FROM Users WHERE Username=?";
 
     @Override
     public User create(User entity) {
@@ -44,7 +44,7 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public void deleteById(String id) {
-        XJdbc.executeUpdate(deleteSql, id);
+        XJdbc.executeUpdate(deleteByIdSql, id);
     }
 
     @Override
@@ -55,10 +55,5 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public User findById(String id) {
         return XQuery.getSingleBean(User.class, findByIdSql, id);
-    }
-
-    @Override
-    public List<User> findByName(String keyword) {
-        return XQuery.getBeanList(User.class, findByNameSql, "%" + keyword + "%");
     }
 }
