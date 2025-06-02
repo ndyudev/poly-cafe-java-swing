@@ -64,7 +64,7 @@ public PolyCafeJFrame() {
         lblFullname.setFont(new java.awt.Font("Times New Roman", 1, 18)); // NOI18N
         lblFullname.setForeground(new java.awt.Color(255, 51, 0));
         lblFullname.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblFullname.setText("Nguyễn Văn Tèo");
+        lblFullname.setText("Châu Nhật Duy");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);

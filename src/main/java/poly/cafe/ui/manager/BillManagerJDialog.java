@@ -14,6 +14,7 @@ import poly.cafe.util.XDialog;
 import poly.cafe.util.XStr;
 
 public class BillManagerJDialog extends javax.swing.JDialog implements BillController {
+
     public BillManagerJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
@@ -257,9 +258,19 @@ public class BillManagerJDialog extends javax.swing.JDialog implements BillContr
         jPanel6.add(jLabel2);
 
         txtId.setEditable(false);
+        txtId.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtIdActionPerformed(evt);
+            }
+        });
         jPanel6.add(txtId);
 
         txtCardId.setEditable(false);
+        txtCardId.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtCardIdActionPerformed(evt);
+            }
+        });
         jPanel6.add(txtCardId);
 
         jLabel3.setText("Thời điểm tạo");
@@ -271,9 +282,19 @@ public class BillManagerJDialog extends javax.swing.JDialog implements BillContr
         jPanel6.add(jLabel4);
 
         txtCheckin.setEditable(false);
+        txtCheckin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtCheckinActionPerformed(evt);
+            }
+        });
         jPanel6.add(txtCheckin);
 
         txtCheckout.setEditable(false);
+        txtCheckout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtCheckoutActionPerformed(evt);
+            }
+        });
         jPanel6.add(txtCheckout);
 
         jLabel5.setText("Trạng thái");
@@ -288,6 +309,11 @@ public class BillManagerJDialog extends javax.swing.JDialog implements BillContr
         jPanel6.add(rdoStatus);
 
         txtUsername.setEditable(false);
+        txtUsername.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtUsernameActionPerformed(evt);
+            }
+        });
         jPanel6.add(txtUsername);
 
         tblBillDetails.setModel(new javax.swing.table.DefaultTableModel(
@@ -433,6 +459,26 @@ public class BillManagerJDialog extends javax.swing.JDialog implements BillContr
         this.moveLast();
     }//GEN-LAST:event_btnMoveLastActionPerformed
 
+    private void txtIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtIdActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtIdActionPerformed
+
+    private void txtCardIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCardIdActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtCardIdActionPerformed
+
+    private void txtCheckinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCheckinActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtCheckinActionPerformed
+
+    private void txtCheckoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCheckoutActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtCheckoutActionPerformed
+
+    private void txtUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUsernameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtUsernameActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -531,33 +577,33 @@ public class BillManagerJDialog extends javax.swing.JDialog implements BillContr
     BillDetailDAO billDetailDao = new BillDetailDAOImpl();
     List<BillDetail> details = List.of();
 
-@Override
-public void open() {
-    this.setLocationRelativeTo(null);
-    filter.setTimeChanged((from, to) -> this.fillToTable());
-    this.fillToTable();
-    this.clear();
-}
+    @Override
+    public void open() {
+        this.setLocationRelativeTo(null);
+        filter.setTimeChanged((from, to) -> this.fillToTable());
+        this.fillToTable();
+        this.clear();
+    }
 
-@Override
-public void fillToTable() {
-    DefaultTableModel model = (DefaultTableModel) tblBills.getModel();
-    model.setRowCount(0);
+    @Override
+    public void fillToTable() {
+        DefaultTableModel model = (DefaultTableModel) tblBills.getModel();
+        model.setRowCount(0);
 
-    items = dao.findByTimeRange(filter.getFrom(), filter.getTo());
-    items.forEach(item -> {
-        Object[] rowData = {
-            item.getId(),
-            String.format("Card #%d", item.getCardId()),
-            XDate.format(item.getCheckin(), Bill.DATE_PATTERN),
-            XDate.format(item.getCheckout(), Bill.DATE_PATTERN),
-            Bill.Status.values()[item.getStatus()].name(),
-            item.getUsername(),
-            false
-        };
-        model.addRow(rowData);
-    });
-}
+        items = dao.findByTimeRange(filter.getFrom(), filter.getTo());
+        items.forEach(item -> {
+            Object[] rowData = {
+                item.getId(),
+                String.format("Card #%d", item.getCardId()),
+                XDate.format(item.getCheckin(), Bill.DATE_PATTERN),
+                XDate.format(item.getCheckout(), Bill.DATE_PATTERN),
+                Bill.Status.values()[item.getStatus()].name(),
+                item.getUsername(),
+                false
+            };
+            model.addRow(rowData);
+        });
+    }
 
     @Override
     public void edit() {
@@ -595,16 +641,16 @@ public void fillToTable() {
         }
     }
 
-@Override
-public void setForm(Bill entity) {
-    txtId.setText(XStr.valueOf(entity.getId()));
-    txtCardId.setText(XStr.valueOf(entity.getCardId()));
-    txtCheckin.setText(XDate.format(entity.getCheckin(), Bill.DATE_PATTERN));
-    txtCheckout.setText(XDate.format(entity.getCheckout(), Bill.DATE_PATTERN));
-    rdoStatus.setIndex(entity.getStatus());
-    txtUsername.setText(entity.getUsername());
-    this.fillBillDetails();
-}
+    @Override
+    public void setForm(Bill entity) {
+        txtId.setText(XStr.valueOf(entity.getId()));
+        txtCardId.setText(XStr.valueOf(entity.getCardId()));
+        txtCheckin.setText(XDate.format(entity.getCheckin(), Bill.DATE_PATTERN));
+        txtCheckout.setText(XDate.format(entity.getCheckout(), Bill.DATE_PATTERN));
+        rdoStatus.setIndex(entity.getStatus());
+        txtUsername.setText(entity.getUsername());
+        this.fillBillDetails();
+    }
 
     @Override
     public Bill getForm() {
@@ -721,19 +767,24 @@ public void setForm(Bill entity) {
         });
     }
 
-@Override
-public void selectTimeRange() {
-    TimeRange range = TimeRange.today();
-    switch (cboTimeRanges.getSelectedIndex()) {
-        case 0 -> range = TimeRange.today();
-        case 1 -> range = TimeRange.thisWeek();
-        case 2 -> range = TimeRange.thisMonth();
-        case 3 -> range = TimeRange.thisQuarter();
-        case 4 -> range = TimeRange.thisYear();
+    @Override
+    public void selectTimeRange() {
+        TimeRange range = TimeRange.today();
+        switch (cboTimeRanges.getSelectedIndex()) {
+            case 0 ->
+                range = TimeRange.today();
+            case 1 ->
+                range = TimeRange.thisWeek();
+            case 2 ->
+                range = TimeRange.thisMonth();
+            case 3 ->
+                range = TimeRange.thisQuarter();
+            case 4 ->
+                range = TimeRange.thisYear();
 
+        }
+        txtBegin.setText(XDate.format(range.getBegin(), "MM/dd/yyyy"));
+        txtEnd.setText(XDate.format(range.getEnd(), "MM/dd/yyyy"));
+        this.fillToTable();
     }
-    txtBegin.setText(XDate.format(range.getBegin(), "MM/dd/yyyy"));
-    txtEnd.setText(XDate.format(range.getEnd(), "MM/dd/yyyy"));
-    this.fillToTable();
-}
 }
