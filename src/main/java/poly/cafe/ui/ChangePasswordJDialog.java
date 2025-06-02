@@ -34,8 +34,8 @@ public class ChangePasswordJDialog extends javax.swing.JDialog implements Change
         txtPassword = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        txtNewpass = new javax.swing.JTextField();
-        txtConfirm = new javax.swing.JTextField();
+        txtNewpass = new javax.swing.JPasswordField();
+        txtConfirmPassword = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Đổi mật khẩu");
@@ -82,7 +82,13 @@ public class ChangePasswordJDialog extends javax.swing.JDialog implements Change
         jLabel4.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
         jPanel2.add(jLabel4);
         jPanel2.add(txtNewpass);
-        jPanel2.add(txtConfirm);
+
+        txtConfirmPassword.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtConfirmPasswordActionPerformed(evt);
+            }
+        });
+        jPanel2.add(txtConfirmPassword);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -152,6 +158,10 @@ public class ChangePasswordJDialog extends javax.swing.JDialog implements Change
         this.open();
     }//GEN-LAST:event_formWindowOpened
 
+    private void txtConfirmPasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtConfirmPasswordActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtConfirmPasswordActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -206,8 +216,8 @@ public class ChangePasswordJDialog extends javax.swing.JDialog implements Change
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JTextField txtConfirm;
-    private javax.swing.JTextField txtNewpass;
+    private javax.swing.JPasswordField txtConfirmPassword;
+    private javax.swing.JPasswordField txtNewpass;
     private javax.swing.JTextField txtPassword;
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
@@ -229,7 +239,7 @@ public void save() {
     String username = txtUsername.getText();
     String password = txtPassword.getText();
     String newpass = txtNewpass.getText();
-    String confirm = txtConfirm.getText();
+    String confirm = txtConfirmPassword.getText();
 
     if (!newpass.equals(confirm)) {
         XDialog.alert("Xác nhận mật khẩu không đúng!");

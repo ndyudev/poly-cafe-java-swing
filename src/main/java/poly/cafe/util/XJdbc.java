@@ -15,7 +15,7 @@ public class XJdbc {
         var dburl = "jdbc:sqlserver://localhost:1433;database=PS44284_ChauNhatDuy_PolyCafe_ASM;encrypt=true;trustServerCertificate=true;";
         var username = "sa";
         var password = "ndyudev227";
-        System.out.println("Kết nôi thành công");
+//        System.out.println("Kết nôi thành công");
         try {
             if (!XJdbc.isReady()) {
                 Class.forName(driver);

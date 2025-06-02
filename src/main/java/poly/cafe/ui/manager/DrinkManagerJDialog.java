@@ -520,53 +520,63 @@ public class DrinkManagerJDialog extends javax.swing.JDialog implements DrinkCon
 
     List<Category> categories = List.of();
 
-@Override
-public void open() {
-    this.setLocationRelativeTo(null);
-    this.fillCategories();
-    this.fillToTable();
-    this.clear();
-}
+    @Override
+    public void open() {
+        this.setLocationRelativeTo(null);
+        this.fillCategories();
+        this.fillToTable();
+        this.clear();
+    }
 
-@Override
-public void fillCategories() {
-    DefaultComboBoxModel cboModel = (DefaultComboBoxModel) cboCategories.getModel();
-    cboModel.removeAllElements();
+    @Override
+    public void fillCategories() {
+        DefaultComboBoxModel cboModel = (DefaultComboBoxModel) cboCategories.getModel();
+        cboModel.removeAllElements();
 
-    DefaultTableModel tblModel = (DefaultTableModel) tblCategories.getModel();
-    tblModel.setRowCount(0);
+        DefaultTableModel tblModel = (DefaultTableModel) tblCategories.getModel();
+        tblModel.setRowCount(0);
 
-    CategoryDAO cdao = new CategoryDAOImpl();
-    categories = cdao.findAll();
+        CategoryDAO cdao = new CategoryDAOImpl();
+        categories = cdao.findAll();
 
-    categories.forEach(category -> {
-        cboModel.addElement(category);
-        tblModel.addRow(new Object[]{category.getName()});
-    });
+        categories.forEach(category -> {
+            cboModel.addElement(category);
+            tblModel.addRow(new Object[]{category.getName()});
+        });
 
-    tblCategories.setRowSelectionInterval(0, 0);
-}
+        tblCategories.setRowSelectionInterval(0, 0);
+    }
 
-@Override
-public void fillToTable() {
-    DefaultTableModel model = (DefaultTableModel) tblDrinks.getModel();
-    model.setRowCount(0);
+    @Override
+    public void fillToTable() {
+        DefaultTableModel model = (DefaultTableModel) tblDrinks.getModel();
+        model.setRowCount(0);
 
-    Category category = categories.get(tblCategories.getSelectedRow());
-    items = dao.findByCategoryId(category.getId());
-    items.forEach(item -> {
-        Object[] rowData = {
-            item.getId(),
-            item.getName(),
-            String.format("%.1f VNĐ", item.getUnitPrice()),
-            String.format("%.0f%%", item.getDiscount() * 100),
-            item.isAvailable() ? "Sẵn có" : "Hết hàng",
-            false
-        };
-        model.addRow(rowData);
-    });
-    this.clear();
-}
+        // Kiểm tra xem có danh mục được chọn không
+        int selectedRow = tblCategories.getSelectedRow();
+        if (selectedRow == -1 && !categories.isEmpty()) {
+            // Nếu không có danh mục được chọn, dùng danh mục đầu tiên
+            selectedRow = 0;
+            tblCategories.setRowSelectionInterval(0, 0);
+        }
+
+        if (selectedRow >= 0) {
+            Category category = categories.get(selectedRow);
+            items = dao.findByCategoryId(category.getId());
+            items.forEach(item -> {
+                Object[] rowData = {
+                    item.getId(),
+                    item.getName(),
+                    String.format("%.1f VNĐ", item.getUnitPrice()),
+                    String.format("%.0f%%", item.getDiscount() * 100),
+                    item.isAvailable() ? "Sẵn có" : "Hết hàng",
+                    false
+                };
+                model.addRow(rowData);
+            });
+        }
+        this.clear();
+    }
 
     @Override
     public void edit() {
@@ -604,35 +614,35 @@ public void fillToTable() {
         }
     }
 
-@Override
-public void setForm(Drink entity) {
-    txtId.setText(entity.getId());
-    txtName.setText(entity.getName());
-    txtUnitPrice.setText(String.valueOf(entity.getUnitPrice()));
-    sliDiscount.setValue((int) (entity.getDiscount() * 100));
-    imgImage.setIcon(entity.getImage());
-    rdoAvailable.setIndex(entity.isAvailable() ? 0 : 1);
-    Category category = categories.get(tblCategories.getSelectedRow());
-    cboCategories.setSelectedItem(category);
+    @Override
+    public void setForm(Drink entity) {
+        txtId.setText(entity.getId());
+        txtName.setText(entity.getName());
+        txtUnitPrice.setText(String.valueOf(entity.getUnitPrice()));
+        sliDiscount.setValue((int) (entity.getDiscount() * 100));
+        imgImage.setIcon(entity.getImage());
+        rdoAvailable.setIndex(entity.isAvailable() ? 0 : 1);
+        Category category = categories.get(tblCategories.getSelectedRow());
+        cboCategories.setSelectedItem(category);
 
 //        lblImage.setToolTipText(entity.getImage());
 //        XIcon.setIcon(lblImage, new File("images", entity.getImage()));
-}
+    }
 
-@Override
-public Drink getForm() {
-    Drink entity = new Drink();
-    entity.setId(txtId.getText());
-    entity.setName(txtName.getText());
-    entity.setDiscount(sliDiscount.getValue() / 100.0);
-    entity.setUnitPrice(Double.parseDouble(txtUnitPrice.getText()));
-    entity.setImage(imgImage.getIcon());
-    entity.setAvailable(rdoAvailable.getIndex() == 0);
-    Category category = categories.get(cboCategories.getSelectedIndex());
-    entity.setCategoryId(category.getId());
-    //entity.setImage(lblImage.getToolTipText());
-    return entity;
-}
+    @Override
+    public Drink getForm() {
+        Drink entity = new Drink();
+        entity.setId(txtId.getText());
+        entity.setName(txtName.getText());
+        entity.setDiscount(sliDiscount.getValue() / 100.0);
+        entity.setUnitPrice(Double.parseDouble(txtUnitPrice.getText()));
+        entity.setImage(imgImage.getIcon());
+        entity.setAvailable(rdoAvailable.getIndex() == 0);
+        Category category = categories.get(cboCategories.getSelectedIndex());
+        entity.setCategoryId(category.getId());
+        //entity.setImage(lblImage.getToolTipText());
+        return entity;
+    }
 
     @Override
     public void create() {
@@ -712,14 +722,14 @@ public Drink getForm() {
         }
     }
 
-@Override
-public void chooseFile() {
-    if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
-        File selectedFile = fileChooser.getSelectedFile();
-        File file = XIcon.copyTo(selectedFile, "images");
-        lblImage.setToolTipText(file.getName());
-        XIcon.setIcon(lblImage, file);
+    @Override
+    public void chooseFile() {
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            File file = XIcon.copyTo(selectedFile, "images");
+            lblImage.setToolTipText(file.getName());
+            XIcon.setIcon(lblImage, file);
+        }
     }
-}
 
 }
