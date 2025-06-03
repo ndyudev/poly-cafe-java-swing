@@ -1,5 +1,6 @@
 package poly.cafe.ui;
 
+import java.net.URL;
 import poly.cafe.util.XAuth;
 import poly.cafe.util.XIcon;
 
@@ -58,7 +59,12 @@ public PolyCafeJFrame() {
         jPanel1.setOpaque(false);
 
         lblPhoto.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblPhoto.setIcon(new javax.swing.ImageIcon(getClass().getResource("/poly/cafe/icons/trump-small.png"))); // NOI18N
+        /*URL imageUrl = getClass().getResource("/poly/cafe/images/trump-small.png");
+	if (imageUrl != null) {
+    	lblPhoto.setIcon(new javax.swing.ImageIcon(imageUrl));
+	} else {
+	
+	}*/
         lblPhoto.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(255, 51, 51), 1, true));
 
         lblFullname.setFont(new java.awt.Font("Times New Roman", 1, 18)); // NOI18N
