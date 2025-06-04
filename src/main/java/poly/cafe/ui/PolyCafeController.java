@@ -6,6 +6,7 @@ import poly.cafe.ui.manager.BillManagerJDialog;
 import poly.cafe.ui.manager.CardManagerJDialog;
 import poly.cafe.ui.manager.CategoryManagerJDialog;
 import poly.cafe.ui.manager.DrinkManagerJDialog;
+import poly.cafe.ui.manager.RevenueManagerJDialog;
 //import poly.cafe.ui.manager.RevenueManagerJDialog;
 import poly.cafe.ui.manager.UserManagerJDialog;
 import poly.cafe.util.XDialog;
@@ -60,6 +61,6 @@ public interface PolyCafeController {
         this.showJDialog(new UserManagerJDialog(frame, true));
     }
     default void showRevenueManagerJDialog(JFrame frame){
-        //this.showJDialog(new RevenueManagerJDialog(frame, true));
+        this.showJDialog(new RevenueManagerJDialog(frame, true));
     }
 }

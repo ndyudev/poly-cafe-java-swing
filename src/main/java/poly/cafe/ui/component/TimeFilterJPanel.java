@@ -132,4 +132,8 @@ public class TimeFilterJPanel extends javax.swing.JPanel {
         this.setFrom(range.getBegin());
         this.setTo(range.getEnd());
     }
+
+    public int getSelectedIndex() {
+        return cboTimeRanges.getSelectedIndex(); // Trả về index từ combobox
+    }
 }

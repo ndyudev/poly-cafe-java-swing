@@ -1,15 +1,11 @@
 package poly.cafe.ui;
 
-import java.net.URL;
 import poly.cafe.util.XAuth;
 import poly.cafe.util.XIcon;
 
 
 public final class PolyCafeJFrame extends javax.swing.JFrame implements PolyCafeController{
 
-/**
- * Creates new form AppJFrame
- */
 public PolyCafeJFrame() {
     initComponents();
     this.init();
@@ -278,7 +274,6 @@ public PolyCafeJFrame() {
     }//GEN-LAST:event_btnUserMgrActionPerformed
 
     private void btnReportMgrActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReportMgrActionPerformed
-        // TODO add your handling code here:
         this.showRevenueManagerJDialog(this);
     }//GEN-LAST:event_btnReportMgrActionPerformed
 
