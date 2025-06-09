@@ -8,9 +8,9 @@ public class XDate {
 
     public static final String PATTERN_FULL = "yyyy-MM-dd HH:mm:ss";
     public static final String PATTERN_SHORT = "MM/dd/yyyy";
-    
+
     private static final SimpleDateFormat formater = new SimpleDateFormat();
-    
+
     public static Date now(){
         return new Date();
     }
@@ -23,11 +23,11 @@ public class XDate {
             return null;
         }
     }
-    
+
     public static Date parse(String dateTime){
         return parse(dateTime, PATTERN_SHORT);
     }
-    
+
     public static String format(Date dateTime, String pattern){
         if(dateTime == null){
             return "";
@@ -39,7 +39,7 @@ public class XDate {
     public static String format(Date dateTime){
         return format(dateTime, PATTERN_SHORT);
     }
-            
+
     public static void main(String[] args) {
         Date date = XDate.parse("Jan 21, 2024", "MMM dd, yyyy");
         String text = XDate.format(date, "dd-MMM-yyyy");

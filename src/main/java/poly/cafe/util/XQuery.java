@@ -82,7 +82,7 @@ public class XQuery {
         }
         return bean;
     }
-    
+
     public static void main(String[] args) {
 //        demo1();
 //        demo2();

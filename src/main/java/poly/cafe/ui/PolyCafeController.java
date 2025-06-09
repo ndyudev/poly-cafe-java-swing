@@ -42,7 +42,7 @@ public interface PolyCafeController {
         this.showJDialog(new SalesJDialog(frame, true));
     }
     default void showHistoryJDialog(JFrame frame){
-       // this.showJDialog(new HistoryJDialog(frame, true));
+        this.showJDialog(new HistoryJDialog(frame, true));
     }
     
     default void showDrinkManagerJDialog(JFrame frame){

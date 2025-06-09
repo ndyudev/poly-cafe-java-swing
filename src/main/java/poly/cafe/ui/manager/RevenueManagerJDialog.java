@@ -121,7 +121,6 @@ public class RevenueManagerJDialog extends javax.swing.JDialog implements Revenu
     @Override
     public void fillToTable() {
         // Không cần gọi fillRevenue() nữa vì đã xử lý trong fillRevenue()
-        // Phương thức này có thể để trống hoặc xử lý giao diện bổ sung nếu cần
     }
 
     @Override
@@ -240,10 +239,17 @@ public class RevenueManagerJDialog extends javax.swing.JDialog implements Revenu
         tblByUser = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Doanh thu bán hàng");
 
         filter.addContainerListener(new java.awt.event.ContainerAdapter() {
             public void componentAdded(java.awt.event.ContainerEvent evt) {
                 filterComponentAdded(evt);
+            }
+        });
+
+        tabs.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                tabsStateChanged(evt);
             }
         });
 
@@ -325,6 +331,10 @@ public class RevenueManagerJDialog extends javax.swing.JDialog implements Revenu
     private void filterComponentAdded(java.awt.event.ContainerEvent evt) {//GEN-FIRST:event_filterComponentAdded
         // TODO add your handling code here:
     }//GEN-LAST:event_filterComponentAdded
+
+    private void tabsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabsStateChanged
+        fillRevenue();
+    }//GEN-LAST:event_tabsStateChanged
 
     /**
      * @param args the command line arguments

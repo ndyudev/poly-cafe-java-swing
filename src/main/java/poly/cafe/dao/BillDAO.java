@@ -42,5 +42,5 @@ public interface BillDAO extends CrudDAO<Bill, Long>{
      * @param to  thời gian kết thúc truy vấn
      * @return kết quả truy vấn
      */
-    public List<Bill> findByUserAndTimeRange(String username, Date from, Date to);
+    List<Bill> findByUserAndTimeRange(String username, Date begin, Date end); // Thay findByUsernameAndTimeRangeSql
 }
