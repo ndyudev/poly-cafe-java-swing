@@ -62,7 +62,7 @@ public class BillDAOImpl implements BillDAO {
     public Bill findById(Long id) {
         return XQuery.getSingleBean(Bill.class, findByIdSql, id);
     }
-    
+
     @Override
     public List<Bill> findByUsername(String username) {
         return XQuery.getBeanList(Bill.class, findByUsernameSql, username);
@@ -90,7 +90,7 @@ public class BillDAOImpl implements BillDAO {
     @Override
     public List<Bill> findByUserAndTimeRange(String username, Date begin, Date end) {
         return XQuery.getBeanList(Bill.class, findByUsernameAndTimeRangeSql, username, begin, end);
-    }
+        }
 
     @Override
     public List<Bill> findByTimeRange(Date begin, Date end) {

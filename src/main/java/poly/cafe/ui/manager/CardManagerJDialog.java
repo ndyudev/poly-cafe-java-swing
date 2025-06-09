@@ -216,6 +216,12 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         jLabel1.setText("Mã thẻ");
         jLabel1.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
         jPanel6.add(jLabel1);
+
+        txtId.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtIdActionPerformed(evt);
+            }
+        });
         jPanel6.add(txtId);
 
         jLabel2.setText("Trạng thái");
@@ -332,6 +338,10 @@ public class CardManagerJDialog extends javax.swing.JDialog implements CardContr
         // TODO add your handling code here:
         this.moveLast();
     }//GEN-LAST:event_btnMoveLastActionPerformed
+
+    private void txtIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtIdActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtIdActionPerformed
 
     /**
      * @param args the command line arguments
