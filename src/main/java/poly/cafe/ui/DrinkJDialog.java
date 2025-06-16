@@ -2,6 +2,7 @@ package poly.cafe.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,9 +17,13 @@ import poly.cafe.entity.Category;
 import poly.cafe.entity.Drink;
 import poly.cafe.util.XDialog;
 
+public class DrinkJDialog extends javax.swing.JDialog implements DrinkController {
 
-public class DrinkJDialog extends javax.swing.JDialog implements DrinkController{
+    @Setter
+    private Bill bill;
 
+    private List<Category> categories = new ArrayList<>();
+    private List<Drink> drinks = new ArrayList<>();
 
     public DrinkJDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -155,7 +160,7 @@ public class DrinkJDialog extends javax.swing.JDialog implements DrinkController
 
     private void tblDrinksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblDrinksMouseClicked
         // TODO add your handling code here:
-        if(evt.getClickCount() == 2){
+        if (evt.getClickCount() == 2) {
             this.addDrinkToBill();
         }
     }//GEN-LAST:event_tblDrinksMouseClicked
@@ -228,63 +233,103 @@ public class DrinkJDialog extends javax.swing.JDialog implements DrinkController
     private javax.swing.JTable tblDrinks;
     // End of variables declaration//GEN-END:variables
 
-@Setter
-Bill bill;
-
-List<Category> categories = List.of();
-List<Drink> drinks = List.of();
-
-@Override
-public void open() {
-    this.setLocationRelativeTo(null);
-    this.fillCategories();
-    this.fillDrinks();
-}
-
-@Override
-public void fillCategories() {
-    CategoryDAO categoryDao = new CategoryDAOImpl();
-    categories = categoryDao.findAll();
-    DefaultTableModel model = (DefaultTableModel) tblCategories.getModel();
-    model.setRowCount(0);
-    categories.forEach(d -> model.addRow(new Object[] {d.getName()}));
-    tblCategories.setRowSelectionInterval(0, 0);
-}
-
-@Override
-public void fillDrinks() {
-    Category category = categories.get(tblCategories.getSelectedRow());
-    
-    DrinkDAO drinkDao = new DrinkDAOImpl();
-    drinks = drinkDao.findByCategoryId(category.getId());
-
-    DefaultTableModel model = (DefaultTableModel) tblDrinks.getModel();
-    model.setRowCount(0);
-    drinks.forEach(d -> {
-        Object[] row = {
-            d.getId(), 
-            d.getName(), 
-            String.format("$%.1f", d.getUnitPrice()), 
-            String.format("%.0f%%", d.getDiscount()*100)
-        };
-        model.addRow(row);
-    });
-}
-
-@Override
-public void addDrinkToBill() {
-    Drink drink = drinks.get(tblDrinks.getSelectedRow());
-    
-    String quantity = XDialog.prompt("Số lượng?");
-    if(quantity != null && quantity.length() > 0){
-        BillDetail detail = new BillDetail();
-        detail.setBillId(bill.getId());
-        detail.setDrinkId(drink.getId());
-        detail.setUnitPrice(drink.getUnitPrice());
-        detail.setDiscount(drink.getDiscount());
-        detail.setQuantity(Integer.parseInt(quantity));
-        
-        new BillDetailDAOImpl().create(detail);
+    @Override
+    public void open() {
+        this.setLocationRelativeTo(null);
+        this.fillCategories();
+        if (!categories.isEmpty()) {
+            this.fillDrinks();
+        } else {
+            JOptionPane.showMessageDialog(this, "Không có loại đồ uống để hiển thị!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+        }
     }
-}
+
+    @Override
+    public void fillCategories() {
+        CategoryDAO categoryDao = new CategoryDAOImpl();
+        categories.clear();
+        categories.addAll(categoryDao.findAll());
+        DefaultTableModel model = (DefaultTableModel) tblCategories.getModel();
+        model.setRowCount(0);
+        if (categories.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy danh mục nào!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+        } else {
+            categories.forEach(d -> model.addRow(new Object[]{d.getName()}));
+            tblCategories.setRowSelectionInterval(0, 0);
+        }
+    }
+
+    @Override
+    public void fillDrinks() {
+        int selectedRow = tblCategories.getSelectedRow();
+        if (selectedRow < 0 || selectedRow >= categories.size()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại đồ uống!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Category category = categories.get(selectedRow);
+        DrinkDAO drinkDao = new DrinkDAOImpl();
+        drinks.clear();
+        drinks.addAll(drinkDao.findByCategoryId(category.getId()));
+
+        DefaultTableModel model = (DefaultTableModel) tblDrinks.getModel();
+        model.setRowCount(0);
+        if (drinks.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không có đồ uống trong danh mục này!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+        } else {
+            drinks.forEach(d -> {
+                Object[] row = {
+                    d.getId(),
+                    d.getName(),
+                    String.format("$%.1f", d.getUnitPrice()),
+                    String.format("%.0f%%", d.getDiscount() * 100)
+                };
+                model.addRow(row);
+            });
+        }
+    }
+
+    @Override
+    public void addDrinkToBill() {
+        int selectedRow = tblDrinks.getSelectedRow();
+        if (selectedRow < 0 || selectedRow >= drinks.size()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một đồ uống!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (bill == null || bill.getId() == null) {
+            JOptionPane.showMessageDialog(this, "Phiếu hóa đơn không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Drink drink = drinks.get(selectedRow);
+        String quantityStr = XDialog.prompt("Số lượng?");
+        if (quantityStr == null || quantityStr.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số lượng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int quantity = Integer.parseInt(quantityStr);
+            if (quantity <= 0) {
+                JOptionPane.showMessageDialog(this, "Số lượng phải lớn hơn 0!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            BillDetail detail = new BillDetail();
+            detail.setBillId(bill.getId());
+            detail.setDrinkId(drink.getId());
+            detail.setUnitPrice(drink.getUnitPrice());
+            detail.setDiscount(drink.getDiscount());
+            detail.setQuantity(quantity);
+
+            new BillDetailDAOImpl().create(detail);
+            JOptionPane.showMessageDialog(this, "Đã thêm đồ uống vào hóa đơn!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            this.dispose(); // Đóng dialog sau khi thêm thành công
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Số lượng phải là số nguyên hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi thêm đồ uống: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 }
